@@ -1,0 +1,273 @@
+(*
+=========================================================
+PROGRAM: ShuffleToPosition   (Converted from FBD export)
+=========================================================
+Purpose:
+- Executes a 3-step shuffle on axis S2:
+  Op1: Clamp state 1 + move to Grip position
+  Op2: Clamp state 2 + move to Release position
+  Op3: Final clamp state + mark done
+- Uses BITDELAY and ClampDelay timers similar to FBD
+
+Inputs (external):
+  SYSTEM_ENABLE, ShuffleStart, NoShuffleDelta, RESET_BIT
+  BITDELAY, ClampDelay
+  S2GripPosition, S2ReleasePositon
+  ShuffleVelocity, ShuffleAcceleration, ShortestWay
+  Axis: S2
+
+Outputs (external):
+  ShuffleOPDone
+  Clamp commands: S1_Close, S3_Close, S2_Open, S2_Close, S1_Open, S3_Open
+
+Internal:
+  ShuffleOp1Start, ShuffleOp2Start, ShuffleOp3Start
+  R_TRIG_1/2/3, TON_1..TON_4, MC_MoveAbsolute_1/2
+*)
+
+PROGRAM ShuffleToPosition
+
+VAR_EXTERNAL
+    SYSTEM_ENABLE : BOOL;
+    ShuffleStart  : BOOL;
+    NoShuffleDelta : BOOL;
+    ShuffleOPDone : BOOL;
+
+    BITDELAY : TIME;
+    ClampDelay : TIME;
+
+    S1_Close : BOOL;
+    S3_Close : BOOL;
+    S2_Open  : BOOL;
+
+    S2_Close : BOOL;
+    S1_Open  : BOOL;
+    S3_Open  : BOOL;
+
+    RESET_BIT : BOOL;
+
+    S2 : AXIS_REF;
+    ShuffleVelocity : LREAL;
+    ShuffleAcceleration : LREAL;
+    ShortestWay : INT;
+    S2GripPosition : REAL;
+    S2ReleasePositon : REAL;
+END_VAR
+
+VAR
+    R_TRIG_1 : R_TRIG;
+    R_TRIG_2 : R_TRIG;
+    R_TRIG_3 : R_TRIG;
+
+    TON_1 : TON;
+    TON_2 : TON;
+    TON_3 : TON;
+    TON_4 : TON;
+
+    MC_MoveAbsolute_1 : MC_MoveAbsolute;
+    MC_MoveAbsolute_2 : MC_MoveAbsolute;
+
+    ShuffleOp1Start : BOOL;
+    ShuffleOp2Start : BOOL;
+    ShuffleOp3Start : BOOL;
+
+    StartEdge : BOOL;
+    Op1DoneEdge : BOOL;
+    Op2DoneEdge : BOOL;
+
+    GripPosL : LREAL;
+    ReleasePosL : LREAL;
+END_VAR
+
+
+(* ========================= *)
+(* Reset / inhibit behavior  *)
+(* ========================= *)
+IF (NOT SYSTEM_ENABLE) OR RESET_BIT THEN
+    ShuffleOPDone := FALSE;
+
+    ShuffleOp1Start := FALSE;
+    ShuffleOp2Start := FALSE;
+    ShuffleOp3Start := FALSE;
+
+    (* Put clamps in safe/neutral state (match your machine convention) *)
+    (* If you prefer "no command", you can set all to FALSE *)
+    S1_Close := FALSE;
+    S2_Close := FALSE;
+    S3_Close := FALSE;
+    S1_Open  := FALSE;
+    S2_Open  := FALSE;
+    S3_Open  := FALSE;
+END_IF;
+
+
+(* ========================= *)
+(* Rising edges              *)
+(* ========================= *)
+R_TRIG_1(CLK := ShuffleStart);
+StartEdge := R_TRIG_1.Q;
+
+(* These are edges on motion completion; matches how FBD usually chains steps *)
+R_TRIG_2(CLK := MC_MoveAbsolute_1.Done);
+Op1DoneEdge := R_TRIG_2.Q;
+
+R_TRIG_3(CLK := MC_MoveAbsolute_2.Done);
+Op2DoneEdge := R_TRIG_3.Q;
+
+
+(* ========================= *)
+(* One-shot delay at start   *)
+(* (FBD uses TON_1 with BITDELAY)
+(* ========================= *)
+TON_1(IN := (SYSTEM_ENABLE AND ShuffleStart), PT := BITDELAY);
+
+
+(* ========================= *)
+(* Start / bypass decision   *)
+(* ========================= *)
+IF SYSTEM_ENABLE THEN
+
+    (* If no shuffle needed, finish immediately when ShuffleStart is requested *)
+    IF StartEdge AND NoShuffleDelta THEN
+        ShuffleOPDone := TRUE;
+
+        ShuffleOp1Start := FALSE;
+        ShuffleOp2Start := FALSE;
+        ShuffleOp3Start := FALSE;
+    END_IF;
+
+    (* Normal path: kick off Op1 when start edge arrives and shuffle is needed *)
+    IF StartEdge AND (NOT NoShuffleDelta) THEN
+        ShuffleOPDone := FALSE;
+
+        ShuffleOp1Start := TRUE;
+        ShuffleOp2Start := FALSE;
+        ShuffleOp3Start := FALSE;
+    END_IF;
+
+END_IF;
+
+
+(* ========================= *)
+(* Op1 clamp state + delay   *)
+(* ========================= *)
+(* Clamp pattern shown on worksheet around Op1:
+   S1_Close = TRUE, S3_Close = TRUE, S2_Open = TRUE
+*)
+IF SYSTEM_ENABLE AND ShuffleOp1Start THEN
+    S1_Close := TRUE;
+    S3_Close := TRUE;
+    S2_Open  := TRUE;
+
+    S2_Close := FALSE;
+    S1_Open  := FALSE;
+    S3_Open  := FALSE;
+END_IF;
+
+TON_2(IN := (SYSTEM_ENABLE AND ShuffleOp1Start), PT := ClampDelay);
+
+
+(* ========================= *)
+(* Move 1: to grip position  *)
+(* ========================= *)
+GripPosL := REAL_TO_LREAL(S2GripPosition);
+
+MC_MoveAbsolute_1(
+    Axis         := S2,
+    Execute      := (SYSTEM_ENABLE AND ShuffleOp1Start AND TON_2.Q),
+    Position     := GripPosL,
+    Velocity     := ShuffleVelocity,
+    Acceleration := ShuffleAcceleration,
+    Deceleration := ShuffleAcceleration,
+    Jerk         := 0.0,
+    Direction    := ShortestWay,
+    BufferMode   := 0
+);
+
+
+(* When move 1 is done, transition to Op2 *)
+IF Op1DoneEdge THEN
+    ShuffleOp1Start := FALSE;
+    ShuffleOp2Start := TRUE;
+    ShuffleOp3Start := FALSE;
+END_IF;
+
+
+(* ========================= *)
+(* Op2 clamp state + delay   *)
+(* ========================= *)
+(* Clamp pattern shown on worksheet around Op2:
+   S2_Close = TRUE, S1_Open = TRUE, S3_Open = TRUE
+*)
+IF SYSTEM_ENABLE AND ShuffleOp2Start THEN
+    S2_Close := TRUE;
+    S1_Open  := TRUE;
+    S3_Open  := TRUE;
+
+    S1_Close := FALSE;
+    S3_Close := FALSE;
+    S2_Open  := FALSE;
+END_IF;
+
+TON_3(IN := (SYSTEM_ENABLE AND ShuffleOp2Start), PT := ClampDelay);
+
+
+(* ========================= *)
+(* Move 2: to release pos    *)
+(* ========================= *)
+ReleasePosL := REAL_TO_LREAL(S2ReleasePositon);
+
+MC_MoveAbsolute_2(
+    Axis         := S2,
+    Execute      := (SYSTEM_ENABLE AND ShuffleOp2Start AND TON_3.Q),
+    Position     := ReleasePosL,
+    Velocity     := ShuffleVelocity,
+    Acceleration := ShuffleAcceleration,
+    Deceleration := ShuffleAcceleration,
+    Jerk         := 0.0,
+    Direction    := ShortestWay,
+    BufferMode   := 0
+);
+
+
+(* When move 2 is done, transition to Op3 *)
+IF Op2DoneEdge THEN
+    ShuffleOp1Start := FALSE;
+    ShuffleOp2Start := FALSE;
+    ShuffleOp3Start := TRUE;
+END_IF;
+
+
+(* ========================= *)
+(* Op3 clamp state + delay   *)
+(* ========================= *)
+(* Worksheet shows Op3 clamp state:
+   S2_Close TRUE, S3_Close TRUE, S1_Close TRUE
+   then after delay, opens are commanded (S1_Open/S2_Open/S3_Open)
+*)
+IF SYSTEM_ENABLE AND ShuffleOp3Start THEN
+    S1_Close := TRUE;
+    S2_Close := TRUE;
+    S3_Close := TRUE;
+
+    S1_Open  := FALSE;
+    S2_Open  := FALSE;
+    S3_Open  := FALSE;
+END_IF;
+
+TON_4(IN := (SYSTEM_ENABLE AND ShuffleOp3Start), PT := ClampDelay);
+
+
+(* After Op3 delay: open all and mark ShuffleOPDone *)
+IF SYSTEM_ENABLE AND ShuffleOp3Start AND TON_4.Q THEN
+    S1_Open := TRUE;
+    S2_Open := TRUE;
+    S3_Open := TRUE;
+
+    (* If your outputs are momentary commands, you may want to pulse these instead *)
+
+    ShuffleOPDone := TRUE;
+    ShuffleOp3Start := FALSE;
+END_IF;
+
+
