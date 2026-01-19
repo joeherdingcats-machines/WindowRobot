@@ -1,0 +1,73 @@
+PROGRAM PositionWrite
+
+VAR
+    MC_ReadActualPosition_1 : MC_ReadActualPosition;
+    MC_ReadActualPosition_2 : MC_ReadActualPosition;
+
+    PWM_1 : PWM;
+    PWM_2 : PWM;
+
+    C001 : BOOL;
+END_VAR
+
+VAR_EXTERNAL
+    S2 : AXIS_REF; (* SGD7S - 9 (Do Not Modify!!) *)
+    S1 : AXIS_REF; (* SGD7S - 14 (Do Not Modify!!) *)
+
+    SYSTEM_ENABLE : BOOL;
+
+    DC : UINT;
+    MW : UINT;
+
+    _S2_ACTUALPOSITION : LREAL; (* PULSED 2 SECOND INTERVALS *)
+    _S1_ACTUALPOSITION : LREAL; (* PULSED 2 SECOND INTERVALS *)
+END_VAR
+
+
+(* ========================= *)
+(* Generate pulse(s)         *)
+(* ========================= *)
+(* PWM_1 takes SYSTEM_ENABLE as Enable, DC as DutyCycle, MW as MaxWidth, output -> C001 *)
+PWM_1(
+    Enable    := SYSTEM_ENABLE,
+    DutyCycle := DC,
+    MaxWidth  := MW,
+    Output    => C001
+);
+
+(* PWM_2 is enabled by C001 (in the worksheet KOT shows SYSTEM_ENABLE and C001 feeding logic),
+   uses same DC/MW, output not used elsewhere in this export (but we keep it for parity). *)
+PWM_2(
+    Enable    := C001,
+    DutyCycle := DC,
+    MaxWidth  := MW,
+    Output    => (* unused *)
+);
+
+
+(* ========================= *)
+(* Read axis actual positions *)
+(* ========================= *)
+MC_ReadActualPosition_1(
+    Axis   := S2,
+    Enable := SYSTEM_ENABLE
+);
+
+MC_ReadActualPosition_2(
+    Axis   := S1,
+    Enable := SYSTEM_ENABLE
+);
+
+
+(* ========================= *)
+(* Write to “pulsed” globals *)
+(* ========================= *)
+(* The FBD shows MOVE blocks taking the Position outputs and writing them into the externals.
+   There is no explicit enable pin on MOVE in ST, so this is effectively unconditional each scan
+   (or at least while SYSTEM_ENABLE is true, since the read blocks are gated). *)
+IF SYSTEM_ENABLE THEN
+    _S2_ACTUALPOSITION := MC_ReadActualPosition_1.Position;
+    _S1_ACTUALPOSITION := MC_ReadActualPosition_2.Position;
+END_IF;
+
+END_PROGRAM
