@@ -1,0 +1,62 @@
+
+
+(* ========================================== *)
+(* SETSWAPZEROS - Part-Specific Offset Management *)
+(* ========================================== *)
+
+(* ---- Part Type Offset Definitions ---- *)
+(* All offsets account for part length differences and robot programming corrections *)
+
+SashOffset := 0.0;              (* RH SHIFTS 2mm away from reference pin, LH shifts 2mm toward reference pin*)
+JambOffset := 17.65;             (* LH Jamb top difference from sash   RH makes no offset*)
+StileOffset := 0.0;              (* Stile offset (TBD based on part requirements) *)
+
+(* ---- Robot Programming Correction ---- *)
+(* Robot was programmed using hinge center, but calculations use hinge top *)
+HingeCenterCorrect := 38.0;  (* Half the hinge height *)
+
+(* ---- Combined Part Offsets ---- *)
+(* These include both part positioning and robot correction *)
+SashTotalOffs := SashOffset + HingeCenterCorrect;           (* 0.0 + 38.0 = 38.0 *)
+JambTotalOffs := JambOffset + HingeCenterCorrect;           (* 17.65 jamb to sash offset + 38.0 hinge offset + Hinge offset= 55.65 *)
+StileTotalOffs := StileOffset + HingeCenterCorrect;         (* 0.0 + 38.0 = 38.0 *)
+
+(* ---- Part Type Selection ---- *)
+(* Part type codes: 1=SASH, 2=JAMB, 3=STILE *)
+CurrentPartOffset := 0.0;
+
+CASE PartType OF
+    1: (* SASH *)
+        CurrentPartOffset := SashTotalOffs;
+    2: (* JAMB *)
+        CurrentPartOffset := JambTotalOffs;
+    3: (* STILE *)
+        CurrentPartOffset := StileTotalOffs;
+    ELSE
+        CurrentPartOffset := SashTotalOffs;  (* Default to sash *)
+END_CASE;
+
+OffsetInitialize(CLK := InitializeFrames);
+IF OffsetInitialize.Q THEN
+    TotalOffset := REFPINADDER + CurrentPartOffset;
+END_IF;
+ 
+ 
+ 
+ 
+(* ----- Offset tracking moved to NextGripCalc.st for better operational control ----- *)
+
+
+
+
+
+IF SETNEXTZERO = TRUE THEN
+	NextPositionDistance := LREAL#0.0;
+END_IF;
+IF SETTOTALOFFSETZERO = TRUE THEN
+	TotalOffset := REAL#0.0;
+END_IF;
+IF RESET_BIT = TRUE THEN
+	TotalOffset := 0.0;
+	PartType := 1;  (* Reset to SASH as default *)
+END_IF;
