@@ -1,0 +1,150 @@
+(* added memory retain function 1/5/2026 *)
+MemoryLoad(CLK:=HMI_ParametersLoad);
+MemoryComplete(CLK := PART_COMPLETE);
+PartLength  := (_Modbus_Input_Partlength);
+IF MemoryLoad.Q THEN
+PartLengthMem := PartLength;
+END_IF;
+IF MemoryComplete.Q OR RESET_BIT OR MemoryRelease THEN
+PartLengthMem := REAL#0.0;
+END_IF;
+(*Memory retain end*)
+
+
+
+ShuffleDistanceArray[1] := HingeDrillOffset[1];
+IF HingeQuant >= 2 THEN ShuffleDistanceArray[2] := HingeDrillOffset[2] - HingeDrillOffset[1]; ELSE ShuffleDistanceArray[2] := 0.0; END_IF;
+IF HingeQuant >= 3 THEN ShuffleDistanceArray[3] := HingeDrillOffset[3] - HingeDrillOffset[2]; ELSE ShuffleDistanceArray[3] := 0.0; END_IF;
+IF HingeQuant >= 4 THEN ShuffleDistanceArray[4] := HingeDrillOffset[4] - HingeDrillOffset[3]; ELSE ShuffleDistanceArray[4] := 0.0; END_IF;
+IF HingeQuant >= 5 THEN ShuffleDistanceArray[5] := HingeDrillOffset[5] - HingeDrillOffset[4]; ELSE ShuffleDistanceArray[5] := 0.0; END_IF;
+IF HingeQuant >= 6 THEN ShuffleDistanceArray[6] := HingeDrillOffset[6] - HingeDrillOffset[5]; ELSE ShuffleDistanceArray[6] := 0.0; END_IF;
+
+(* ----- Calculate EOP and S2 legal bounds ----- *)
+IF PartlengthMem  + TotalOffset >= S1_MaxPosition THEN
+    EOP_Calc := S1_MaxPosition;
+ELSE
+    EOP_Calc := PartlengthMem  + TotalOffset;
+END_IF;
+
+S2_MaxLegal := EOP_Calc - REAL#300.0;
+IF S2_MaxLegal > S2_MaxPosition THEN
+    S2_MaxLegal := S2_MaxPosition;
+END_IF;
+S2_MinLegal := 640.0;
+
+(* ----- Calculate S2 Grip and Release for current operation ----- *)
+IF (OperationIndex >= 1) AND (OperationIndex <= 6) THEN
+    (* Calculate required part movement *)
+    RequiredPartMovement := HingeDrillOffset[OperationIndex] - TotalOffset;
+
+    (* Try to grip from current position *)
+    S2GripPosition := S2_CurrentPosition;
+    S2ReleasePosition := S2_CurrentPosition + RequiredPartMovement;
+
+    (* Adjust if movement violates limits *)
+    IF (S2GripPosition < S2_MinLegal) OR (S2GripPosition > S2_MaxLegal) OR
+       (S2ReleasePosition < S2_MinLegal) OR (S2ReleasePosition > S2_MaxLegal) THEN
+
+        (* Adjust release position *)
+        IF S2ReleasePosition < S2_MinLegal THEN
+            S2ReleasePosition := S2_MinLegal;
+            S2GripPosition := S2ReleasePosition - RequiredPartMovement;
+        END_IF;
+        IF S2ReleasePosition > S2_MaxLegal THEN
+            S2ReleasePosition := S2_MaxLegal;
+            S2GripPosition := S2ReleasePosition - RequiredPartMovement;
+        END_IF;
+
+        (* Clamp grip position *)
+        IF S2GripPosition < S2_MinLegal THEN
+            S2GripPosition := S2_MinLegal;
+        END_IF;
+        IF S2GripPosition > S2_MaxLegal THEN
+            S2GripPosition := S2_MaxLegal;
+        END_IF;
+    END_IF;
+
+    (* Final safety clamp on release *)
+    IF S2ReleasePosition > S2_MaxPosition THEN
+        S2ReleasePosition := S2_MaxPosition;
+    END_IF;
+ELSE
+    S2GripPosition := S2_CurrentPosition;
+    S2ReleasePosition := S2_CurrentPosition;
+    RequiredPartMovement := 0.0;
+END_IF;
+
+Delta := S2ReleasePosition - S2GripPosition;
+
+(* ----- Update position tracking when shuffle completes ----- *)
+ShuffleDoneEdge(CLK := ShuffleOPDone);
+IF ShuffleDoneEdge.Q THEN
+    TotalOffset := TotalOffset + Delta;
+    S2_CurrentPosition := S2ReleasePosition;
+END_IF;
+
+(* ----- S1 Following Logic ----- *)
+IF S1_MaxPosition <= (PartlengthMem  - TotalOffset) THEN
+    S1_Following := FALSE;
+    S1_Operation_Position := S1_MaxPosition;
+ELSE
+    S1_Following := TRUE;
+    S1_Operation_Position := PartlengthMem  - TotalOffset - 3.0;
+END_IF;
+
+(* ----- Build S1 and S2 Cycle Positions ----- *)
+FOR i := 1 TO 6 DO
+    IF HingeQuant >= i THEN
+        (* S1 position based on drill index *)
+        CASE DrillPlanDrillIndex[i] OF
+            3: S1_Cycle_Position[i] := LHSashDrillPosition3 + S1OffsetFromDrillOp;
+            4: S1_Cycle_Position[i] := LHSashDrillPosition4 + S1OffsetFromDrillOp;
+            5: S1_Cycle_Position[i] := LHSashDrillPosition5 + S1OffsetFromDrillOp;
+            6: S1_Cycle_Position[i] := LHSashDrillPosition6 + S1OffsetFromDrillOp;
+        ELSE
+            (* Drill index 0, 1, 2 - use part end *)
+            S1_Cycle_Position[i] := PartlengthMem  + HingeDrillOffset[i];
+        END_CASE;
+
+        IF S1_Cycle_Position[i] > S1_MaxPosition THEN
+            S1_Cycle_Position[i] := S1_MaxPosition;
+        END_IF;
+
+        (* S2 position based on drill index *)
+        CASE DrillPlanDrillIndex[i] OF
+            2: S2_Cycle_Position[i] := LHSashDrillPosition2 + S2OffsetFromDrillOp;
+            3: S2_Cycle_Position[i] := LHSashDrillPosition3 - S2OffsetFromDrillOp;
+            4: S2_Cycle_Position[i] := LHSashDrillPosition4 - S2OffsetFromDrillOp;
+            5: S2_Cycle_Position[i] := LHSashDrillPosition5 - S2OffsetFromDrillOp;
+            6: S2_Cycle_Position[i] := LHSashDrillPosition6 - S2OffsetFromDrillOp;
+        ELSE
+            S2_Cycle_Position[i] := S2_MinLegal;
+        END_CASE;
+    ELSE
+        S1_Cycle_Position[i] := S1_MaxPosition;
+        S2_Cycle_Position[i] := S2_MinLegal;
+    END_IF;
+END_FOR;
+
+(* ----- Set targets for current operation ----- *)
+IF (OperationIndex >= 1) AND (OperationIndex <= 6) THEN
+    S1_OperationPosition_Target := S1_Cycle_Position[OperationIndex];
+
+    (* Last operation: S2 stays at current position *)
+    IF OperationIndex >= HingeQuant THEN
+        S2_OperationPosition_Target := S2_CurrentPosition;
+    ELSE
+        S2_OperationPosition_Target := S2_Cycle_Position[OperationIndex];
+    END_IF;
+
+    (* Clamp to legal ranges *)
+    IF S1_OperationPosition_Target > S1_MaxPosition THEN
+        S1_OperationPosition_Target := S1_MaxPosition;
+    END_IF;
+    IF S2_OperationPosition_Target > S2_MaxLegal THEN
+        S2_OperationPosition_Target := S2_MaxLegal;
+    END_IF;
+    IF S2_OperationPosition_Target < S2_MinLegal THEN
+        S2_OperationPosition_Target := S2_MinLegal;
+    END_IF;
+END_IF;
