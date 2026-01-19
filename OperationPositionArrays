@@ -1,0 +1,42 @@
+(*Sash Hinge Drill Operation Positions*)
+SashHingeOperationPosition[1] := 375.500;
+SashHingeOperationPosition[2] := 894.999;
+SashHingeOperationPosition[3] := 1294.883;
+SashHingeOperationPosition[4] := 1805.037;
+SashHingeOperationPosition[5] := 771.036;
+SashHingeOperationPosition[6] := 2295.000;
+(*Jamb Hinge Drill Operation Positions*)
+JambHingeOperationPosition[1] := 510.500;
+JambHingeOperationPosition[2] := 895.000;
+JambHingeOperationPosition[3] := 1294.800;
+JambHingeOperationPosition[4] := 1805.000;
+JambHingeOperationPosition[5] := 190.000;
+JambHingeOperationPosition[6] := 2012.000;
+(*Sash Hinge Shuttle 1 positions*)
+S1SashOperationPositionArray[1] :=2102.0;
+S1SashOperationPositionArray[2] :=1387.0;
+S1SashOperationPositionArray[3] :=1601.0;
+S1SashOperationPositionArray[4] :=2102.0;
+S1SashOperationPositionArray[5] :=2102.0;
+S1SashOperationPositionArray[6] :=2138.0;
+(*Sash Hinge Shuttle 2 Positions*)
+S2SashOperationPositionArray[1] :=150.0;
+S2SashOperationPositionArray[2] :=150.0;
+S2SashOperationPositionArray[3] :=150.0;
+S2SashOperationPositionArray[4] :=150.0;
+S2SashOperationPositionArray[5] :=150.0;
+S2SashOperationPositionArray[6] :=150.0;
+(*Jamb Hinge Shuttle 1 Positions*)
+S1JambOperationPositionArray[1] :=EOP;
+S1JambOperationPositionArray[2] :=1249.1;
+S1JambOperationPositionArray[3] :=1434.0;
+S1JambOperationPositionArray[4] :=1973.6;
+S1JambOperationPositionArray[5] :=EOP;
+S1JambOperationPositionArray[6] :=2181.8;
+(*Jamb Hinge Shuttle 2 Positions*)
+S2JambOperationPositionArray[1] := 759.6;
+S2JambOperationPositionArray[2] :=839.8;
+S2JambOperationPositionArray[3] :=1052.7;
+S2JambOperationPositionArray[4] :=1601.8;
+S2JambOperationPositionArray[5] :=561.5;
+S2JambOperationPositionArray[6] :=1804.2;
