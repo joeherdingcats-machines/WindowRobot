@@ -1,0 +1,256 @@
+PROGRAM S1_S2_OperationPosition
+
+VAR_EXTERNAL
+    SYSTEM_ENABLE : BOOL;
+    S1_S2_OPPOS   : BOOL;
+
+    (* Clamp IO *)
+    S2_Open  : BOOL;
+    S1_Close : BOOL;
+    S3_Close : BOOL;
+    S2_Close : BOOL;
+    S1_Open  : BOOL;
+    S3_Open  : BOOL;
+
+    ClampDelay : TIME;
+
+    (* Motion *)
+    S2 : AXIS_REF;
+    ShuffleVelocity : LREAL;
+    ShuffleAcceleration : LREAL;
+    ShortestWay : INT;
+    S2_Operation_Position : REAL;
+
+    S1 : AXIS_REF;
+    S1_Operation_Position : REAL;
+
+    (* Sequencing / status *)
+    Second : TIME;
+    S1S2_IN_Operation_Position : BOOL;
+
+    (* SFC overrides *)
+    ShufflePosQuery : BOOL;
+    S1_Operation_Position_FromSFC : BOOL;
+    S1_Operation_Position_SFC : REAL;
+    S2_Operation_Position_SFC : REAL;
+    S2_Operation_Position_FromSFC : BOOL;
+
+    RESET_BIT : BOOL;
+END_VAR
+
+VAR
+    R_TRIG_1 : R_TRIG;
+
+    (* “Phase 1” internal latch from FBD *)
+    S1S2OPOS_P1 : BOOL;
+
+    (* Step completion flags (these appear as tags on the worksheet) *)
+    S2_TO_OPPOS : BOOL;
+    S1_TO_OPPOS : BOOL;
+
+    (* Timers and moves *)
+    TON_1 : TON;
+    TON_2 : TON;
+    TON_3 : TON;
+    TON_4 : TON;
+
+    MC_MoveAbsolute_1 : MC_MoveAbsolute;   (* S2 move *)
+    MC_MoveAbsolute_2 : MC_MoveAbsolute;   (* S1 move *)
+
+    (* Other internals visible in VAR list *)
+    S1REPOSCOMPLETE : BOOL;    (* not clearly used in sheet; keep for parity *)
+    S1_ReposComplete : BOOL;
+    TP_1 : TP;                 (* declared in FBD but not placed/used in this worksheet *)
+
+    (* Selected positions (from SEL blocks) *)
+    S2_OpPos_Selected : REAL;
+    S1_OpPos_Selected : REAL;
+
+    S2_OpPos_L : LREAL;
+    S1_OpPos_L : LREAL;
+
+    (* Done edges for transitions *)
+    S2MoveDoneEdge : BOOL;
+    S1MoveDoneEdge : BOOL;
+
+    R_TRIG_S2Done : R_TRIG;
+    R_TRIG_S1Done : R_TRIG;
+END_VAR
+
+
+(* ========================= *)
+(* Reset / disable behavior  *)
+(* ========================= *)
+IF (NOT SYSTEM_ENABLE) OR RESET_BIT THEN
+    S1S2OPOS_P1 := FALSE;
+
+    S2_TO_OPPOS := FALSE;
+    S1_TO_OPPOS := FALSE;
+
+    S1_ReposComplete := FALSE;
+    S1REPOSCOMPLETE := FALSE;
+
+    ShufflePosQuery := FALSE;
+    S1S2_IN_Operation_Position := FALSE;
+
+    (* Optional: clear clamp commands *)
+    S2_Open  := FALSE;
+    S2_Close := FALSE;
+    S1_Open  := FALSE;
+    S1_Close := FALSE;
+    S3_Open  := FALSE;
+    S3_Close := FALSE;
+END_IF;
+
+
+(* ========================= *)
+(* Start trigger             *)
+(* ========================= *)
+R_TRIG_1(CLK := (SYSTEM_ENABLE AND S1_S2_OPPOS));
+IF R_TRIG_1.Q THEN
+    (* FBD MOVE TRUE -> S1S2OPOS_P1 *)
+    S1S2OPOS_P1 := TRUE;
+
+    (* Clear completion flags for a new cycle *)
+    S2_TO_OPPOS := FALSE;
+    S1_TO_OPPOS := FALSE;
+    S1_ReposComplete := FALSE;
+    S1S2_IN_Operation_Position := FALSE;
+END_IF;
+
+
+(* ========================= *)
+(* Position selection (SEL)  *)
+(* ========================= *)
+(* SEL: if G then IN1 else IN0 *)
+IF S2_Operation_Position_FromSFC THEN
+    S2_OpPos_Selected := S2_Operation_Position_SFC;
+ELSE
+    S2_OpPos_Selected := S2_Operation_Position;
+END_IF;
+
+IF S1_Operation_Position_FromSFC THEN
+    S1_OpPos_Selected := S1_Operation_Position_SFC;
+ELSE
+    S1_OpPos_Selected := S1_Operation_Position;
+END_IF;
+
+
+(* ========================= *)
+(* Phase 1: Clamp for S2 move*)
+(* ========================= *)
+IF SYSTEM_ENABLE AND S1S2OPOS_P1 THEN
+    (* Worksheet annotation: "Opens S2 Clamp closes S1-S3" *)
+    S2_Open  := TRUE;
+    S1_Close := TRUE;
+    S3_Close := TRUE;
+
+    (* Complementary outputs shown near same network (FALSE moves) *)
+    S2_Close := FALSE;
+    S1_Open  := FALSE;
+    S3_Open  := FALSE;
+END_IF;
+
+(* TON_1 delays the start of the S2 move *)
+TON_1(IN := (SYSTEM_ENABLE AND S1S2OPOS_P1), PT := ClampDelay);
+
+
+(* ========================= *)
+(* Move S2 to operation pos  *)
+(* ========================= *)
+S2_OpPos_L := REAL_TO_LREAL(S2_OpPos_Selected);
+
+MC_MoveAbsolute_1(
+    Axis         := S2,
+    Execute      := (SYSTEM_ENABLE AND S1S2OPOS_P1 AND TON_1.Q),
+    Position     := S2_OpPos_L,
+    Velocity     := ShuffleVelocity,
+    Acceleration := ShuffleAcceleration,
+    Deceleration := ShuffleAcceleration,
+    Jerk         := 0.0,
+    Direction    := ShortestWay,
+    BufferMode   := 0
+);
+
+(* Edge on S2 move done to transition *)
+R_TRIG_S2Done(CLK := MC_MoveAbsolute_1.Done);
+S2MoveDoneEdge := R_TRIG_S2Done.Q;
+
+IF S2MoveDoneEdge THEN
+    S2_TO_OPPOS := TRUE;          (* seen on worksheet *)
+    S1S2OPOS_P1 := FALSE;         (* worksheet shows MOVE FALSE -> S1S2OPOS_P1 *)
+    S1_TO_OPPOS := TRUE;          (* worksheet shows S1_TO_OPPOS being asserted for next phase *)
+END_IF;
+
+
+(* ========================= *)
+(* Phase 2: Clamp for S1 move*)
+(* ========================= *)
+IF SYSTEM_ENABLE AND S1_TO_OPPOS THEN
+    (* Worksheet annotation: "Opens S1 Clamp - Moves S1 To Operational Position" *)
+    S1_Open := TRUE;
+
+    (* There are explicit FALSE moves to S1_Close in this area *)
+    S1_Close := FALSE;
+END_IF;
+
+TON_2(IN := (SYSTEM_ENABLE AND S1_TO_OPPOS), PT := ClampDelay);
+
+
+(* ========================= *)
+(* Move S1 to operation pos  *)
+(* ========================= *)
+S1_OpPos_L := REAL_TO_LREAL(S1_OpPos_Selected);
+
+MC_MoveAbsolute_2(
+    Axis         := S1,
+    Execute      := (SYSTEM_ENABLE AND S1_TO_OPPOS AND TON_2.Q),
+    Position     := S1_OpPos_L,
+    Velocity     := ShuffleVelocity,
+    Acceleration := ShuffleAcceleration,
+    Deceleration := ShuffleAcceleration,
+    Jerk         := 0.0,
+    Direction    := ShortestWay,
+    BufferMode   := 0
+);
+
+R_TRIG_S1Done(CLK := MC_MoveAbsolute_2.Done);
+S1MoveDoneEdge := R_TRIG_S1Done.Q;
+
+IF S1MoveDoneEdge THEN
+    S1_ReposComplete := TRUE;     (* explicitly labeled in worksheet *)
+    S1REPOSCOMPLETE := TRUE;      (* keep in sync if both exist *)
+END_IF;
+
+
+(* ========================= *)
+(* After S1 reposition: query + settle + all clear *)
+(* ========================= *)
+(* TON_3 appears tied to S1_ReposComplete and ClampDelay, then drives ShufflePosQuery TRUE *)
+TON_3(IN := (SYSTEM_ENABLE AND S1_ReposComplete), PT := ClampDelay);
+
+IF SYSTEM_ENABLE AND TON_3.Q THEN
+    (* Worksheet shows ShufflePosQuery being driven TRUE here *)
+    ShufflePosQuery := TRUE;
+ELSE
+    ShufflePosQuery := FALSE;
+END_IF;
+
+(* TON_4 uses Second; after that it sets S1S2_IN_Operation_Position TRUE *)
+TON_4(IN := (SYSTEM_ENABLE AND S1S2_IN_Operation_Position), PT := Second);
+
+(* In the worksheet, S1S2_IN_Operation_Position is asserted after the reposition/settle.
+   We’ll assert it once S1_ReposComplete is true AND we’ve waited Second.
+*)
+IF SYSTEM_ENABLE AND S1_ReposComplete THEN
+    (* Start the settle timer “Second” *)
+    TON_4(IN := TRUE, PT := Second);
+ELSE
+    TON_4(IN := FALSE, PT := Second);
+END_IF;
+
+IF SYSTEM_ENABLE AND TON_4.Q AND S1_ReposComplete THEN
+    S1S2_IN_Operation_Position := TRUE;
+END_IF;
+
+
