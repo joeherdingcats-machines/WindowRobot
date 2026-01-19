@@ -1,0 +1,49 @@
+PROGRAM ShuttlesInPosition
+
+VAR
+    MC_ReadActualPosition_1 : MC_ReadActualPosition;
+    MC_ReadActualPosition_2 : MC_ReadActualPosition;
+
+    Tolerance : LREAL := LREAL#0.05;
+
+    S1_Diff : LREAL;
+    S2_Diff : LREAL;
+
+    S1_InTol : BOOL;
+    S2_InTol : BOOL;
+
+    HMI_ProgramCall : BOOL; (* exists in your var list *)
+END_VAR
+
+VAR_EXTERNAL
+    S1 : AXIS_REF; (* SGD7S - 14 *)
+    S2 : AXIS_REF; (* SGD7S - 9  *)
+
+    SYSTEM_ENABLE : BOOL;
+    RobotInProduction : BOOL;
+
+    S1_Target : REAL;        (* declared in FBD, not used here *)
+    S1_TargetLReal : LREAL;
+    S2_TargetLReal : LREAL;
+
+    Modbus_TablesAtStart : BOOL;
+END_VAR
+
+
+(* --- Read actual positions --- *)
+MC_ReadActualPosition_1(Axis := S1, Enable := TRUE);
+MC_ReadActualPosition_2(Axis := S2, Enable := TRUE);
+
+(* --- S1: abs(target - actual) <= tolerance --- *)
+S1_Diff := ABS(S1_TargetLReal - MC_ReadActualPosition_1.Position);
+S1_InTol := (S1_Diff <= Tolerance);
+
+(* --- S2: abs(target - actual) <= tolerance --- *)
+S2_Diff := ABS(S2_TargetLReal - MC_ReadActualPosition_2.Position);
+S2_InTol := (S2_Diff <= Tolerance);
+
+(* --- Final result --- *)
+(* If your FBD does NOT gate with SYSTEM_ENABLE/RobotInProduction, remove them *)
+Modbus_TablesAtStart := SYSTEM_ENABLE AND RobotInProduction AND S1_InTol AND S2_InTol;
+
+END_PROGRAM
