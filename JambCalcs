@@ -1,0 +1,269 @@
+(* ========================================== *)
+(* JAMB CALCS - Consolidated One-Time Calculation *)
+(* ========================================== *)
+(* Runs ONCE on parameter load, values retained in memory *)
+(* Combines: JambDrillOptimizer, Sorting, EOP Calc, Position Arrays *)
+(* Single source of truth for all Jamb operation values *)
+
+(* ---- Trigger: Run calculations once on parameter load ---- *)
+JambCalcs_LoadTrig(CLK := HMI_ParametersLoad);
+JambCalcs_ResetTrig(CLK := RESET_BIT OR PART_COMPLETE);
+
+(* ---- Reset all values on reset or part complete ---- *)
+IF JambCalcs_ResetTrig.Q THEN
+    JambCalcs_Complete := FALSE;
+
+    (* Clear all calculated arrays *)
+    FOR i := 1 TO 6 DO
+        JambDrillPlanOffsets[i] := 0.0;
+        JambDrillPlanDrillIndex[i] := 0;
+        JambDrillPlanHingeIndex[i] := 0;
+        JambSortedOrder[i] := 0;
+        JambSortedOffsets[i] := 0.0;
+        JambOPZone[i] := 0;
+        (*S1JambOperationPositionArray[i] := 0.0;
+        S2JambOperationPositionArray[i] := 0.0;*)
+    END_FOR;
+
+    EOP_Jamb := 0.0;
+    JambOperationCount := 0;
+END_IF;
+
+(* ---- Main Calculation Block - Runs ONCE on parameter load ---- *)
+IF JambCalcs_LoadTrig.Q AND NOT JambCalcs_Complete THEN
+
+    (* ============================================================ *)
+    (* SECTION 1: CALCULATE EOP (End of Part Position)              *)
+    (* ============================================================ *)
+
+    IF PartLengthMem + TotalOffset >= S1_MaxPosition THEN
+        EOP_Jamb := S1_MaxPosition;
+    ELSE
+        EOP_Jamb := PartLengthMem + TotalOffset;
+    END_IF;
+
+    (* Store operation count *)
+    JambOperationCount := HingeQuant;
+
+    (* ============================================================ *)
+    (* SECTION 2: DRILL OPTIMIZER - Find best zone for each hinge   *)
+    (* ============================================================ *)
+    (* Compares each HingeLocation to JambMillPosition1-6Offset     *)
+    (* Outputs: JambDrillPlanOffsets[], JambDrillPlanDrillIndex[]   *)
+
+    FOR i := 1 TO 6 DO
+        IF HingeQuant >= i THEN
+            BestAbsOffset := 9999.0;
+            BestOffset := 0.0;
+            BestZone := 0;
+
+            (* Check Zone 1 *)
+            TempOffset := JambMillPosition1Offset - HingeLocations[i];
+            IF ABS(TempOffset) < BestAbsOffset THEN
+                BestOffset := TempOffset;
+                BestAbsOffset := ABS(TempOffset);
+                BestZone := 1;
+            END_IF;
+
+            (* Check Zone 2 *)
+            TempOffset := JambMillPosition2Offset - HingeLocations[i];
+            IF ABS(TempOffset) < BestAbsOffset THEN
+                BestOffset := TempOffset;
+                BestAbsOffset := ABS(TempOffset);
+                BestZone := 2;
+            END_IF;
+
+            (* Check Zone 3 *)
+            TempOffset := JambMillPosition3Offset - HingeLocations[i];
+            IF ABS(TempOffset) < BestAbsOffset THEN
+                BestOffset := TempOffset;
+                BestAbsOffset := ABS(TempOffset);
+                BestZone := 3;
+            END_IF;
+
+            (* Check Zone 4 *)
+            TempOffset := JambMillPosition4Offset - HingeLocations[i];
+            IF ABS(TempOffset) < BestAbsOffset THEN
+                BestOffset := TempOffset;
+                BestAbsOffset := ABS(TempOffset);
+                BestZone := 4;
+            END_IF;
+
+            (* Check Zone 5 *)
+            TempOffset := JambMillPosition5Offset - HingeLocations[i];
+            IF ABS(TempOffset) < BestAbsOffset THEN
+                BestOffset := TempOffset;
+                BestAbsOffset := ABS(TempOffset);
+                BestZone := 5;
+            END_IF;
+
+            (* Check Zone 6 *)
+            TempOffset := JambMillPosition6Offset - HingeLocations[i];
+            IF ABS(TempOffset) < BestAbsOffset THEN
+                BestOffset := TempOffset;
+                BestAbsOffset := ABS(TempOffset);
+                BestZone := 6;
+            END_IF;
+
+            (* Store results *)
+            JambDrillPlanOffsets[i] := BestOffset;
+            JambDrillPlanDrillIndex[i] := BestZone;
+            JambDrillPlanHingeIndex[i] := i;
+        ELSE
+            (* No hinge at this position *)
+            JambDrillPlanOffsets[i] := 0.0;
+            JambDrillPlanDrillIndex[i] := 0;
+            JambDrillPlanHingeIndex[i] := 0;
+        END_IF;
+    END_FOR;
+
+    (* ============================================================ *)
+    (* SECTION 3: SORTING - Positive offsets first, then negative   *)
+    (* ============================================================ *)
+    (* Sort order: Positive (largest to smallest), then Negative (smallest magnitude first) *)
+    (* Output: JambSortedOrder[] - which hinge to process at each operation step *)
+
+    (* Copy offsets and hinge IDs to temp arrays *)
+    FOR i := 1 TO 6 DO
+        JambTempSortOffsets[i] := JambDrillPlanOffsets[i];
+        JambTempSortHinges[i] := i;
+
+        (* Mask unused hinges with large negative value *)
+        IF HingeQuant < i THEN
+            JambTempSortOffsets[i] := -1.0E9;
+            JambTempSortHinges[i] := 0;
+        END_IF;
+    END_FOR;
+
+    (* Bubble sort with custom comparison *)
+    FOR i := 1 TO 5 DO
+        FOR j := i + 1 TO 6 DO
+            ShouldSwap := FALSE;
+
+            (* Case 1: Both positive - larger positive comes first *)
+            IF (JambTempSortOffsets[i] >= 0.0) AND (JambTempSortOffsets[j] >= 0.0) THEN
+                IF JambTempSortOffsets[i] < JambTempSortOffsets[j] THEN
+                    ShouldSwap := TRUE;
+                END_IF;
+
+            (* Case 2: Both negative - smaller magnitude (closer to zero) comes first *)
+            ELSIF (JambTempSortOffsets[i] < 0.0) AND (JambTempSortOffsets[j] < 0.0) THEN
+                IF ABS(JambTempSortOffsets[i]) > ABS(JambTempSortOffsets[j]) THEN
+                    ShouldSwap := TRUE;
+                END_IF;
+
+            (* Case 3: i is negative, j is positive - j should come first *)
+            ELSIF (JambTempSortOffsets[i] < 0.0) AND (JambTempSortOffsets[j] >= 0.0) THEN
+                ShouldSwap := TRUE;
+
+            (* Case 4: i is positive, j is negative - keep current order *)
+            END_IF;
+
+            (* Perform swap if needed *)
+            IF ShouldSwap THEN
+                SwapOffset := JambTempSortOffsets[i];
+                JambTempSortOffsets[i] := JambTempSortOffsets[j];
+                JambTempSortOffsets[j] := SwapOffset;
+
+                SwapHinge := JambTempSortHinges[i];
+                JambTempSortHinges[i] := JambTempSortHinges[j];
+                JambTempSortHinges[j] := SwapHinge;
+            END_IF;
+        END_FOR;
+    END_FOR;
+
+    (* Write sorted order and sorted offsets *)
+    FOR i := 1 TO 6 DO
+        JambSortedOrder[i] := JambTempSortHinges[i];
+        JambSortedOffsets[i] := JambTempSortOffsets[i];
+    END_FOR;
+
+    (* ============================================================ *)
+    (* SECTION 4: BUILD OPZONE ARRAY - Zone for each operation      *)
+    (* ============================================================ *)
+    (* JambOPZone[OperationIndex] = which robot zone for that operation *)
+
+FOR i := 1 TO 6 DO
+    IF (JambSortedOrder[i] >= 1) AND (JambSortedOrder[i] <= 6) THEN
+        CASE JambSortedOrder[i] OF
+            1: JambOPZone[i] := JambDrillPlanDrillIndex[1];
+            2: JambOPZone[i] := JambDrillPlanDrillIndex[2];
+            3: JambOPZone[i] := JambDrillPlanDrillIndex[3];
+            4: JambOPZone[i] := JambDrillPlanDrillIndex[4];
+            5: JambOPZone[i] := JambDrillPlanDrillIndex[5];
+            6: JambOPZone[i] := JambDrillPlanDrillIndex[6];
+        ELSE
+            JambOPZone[i] := 0;
+        END_CASE;
+    ELSE
+        JambOPZone[i] := 0;
+    END_IF;
+END_FOR;
+
+    (* ============================================================ *)
+    (* SECTION 5: POPULATE SHUTTLE POSITION ARRAYS                  *)
+    (* ============================================================ *)
+    (* S1/S2JambOperationPositionArray indexed by ZONE (1-6)        *)
+    (* These are the static positions shuttles go to for each zone  *)
+
+    (* ============================================================ *)
+    (* SECTION 6: MARK CALCULATION COMPLETE                         *)
+    (* ============================================================ *)
+
+    JambCalcs_Complete := TRUE;
+
+END_IF;
+
+(* ============================================================ *)
+(* DEBUG OUTPUTS - For monitoring calculated values             *)
+(* ============================================================ *)
+
+Debug_JambCalcs_Complete := JambCalcs_Complete;
+Debug_JambCalcs_OpCount := JambOperationCount;
+Debug_JambCalcs_EOP := EOP_Jamb;
+
+(* Drill Plan Results *)
+Debug_JambCalcs_Offset1 := JambDrillPlanOffsets[1];
+Debug_JambCalcs_Offset2 := JambDrillPlanOffsets[2];
+Debug_JambCalcs_Offset3 := JambDrillPlanOffsets[3];
+Debug_JambCalcs_Offset4 := JambDrillPlanOffsets[4];
+Debug_JambCalcs_Offset5 := JambDrillPlanOffsets[5];
+Debug_JambCalcs_Offset6 := JambDrillPlanOffsets[6];
+
+Debug_JambCalcs_Zone1 := JambDrillPlanDrillIndex[1];
+Debug_JambCalcs_Zone2 := JambDrillPlanDrillIndex[2];
+Debug_JambCalcs_Zone3 := JambDrillPlanDrillIndex[3];
+Debug_JambCalcs_Zone4 := JambDrillPlanDrillIndex[4];
+Debug_JambCalcs_Zone5 := JambDrillPlanDrillIndex[5];
+Debug_JambCalcs_Zone6 := JambDrillPlanDrillIndex[6];
+
+(* Sorted Order *)
+Debug_JambCalcs_SortOrd1 := JambSortedOrder[1];
+Debug_JambCalcs_SortOrd2 := JambSortedOrder[2];
+Debug_JambCalcs_SortOrd3 := JambSortedOrder[3];
+Debug_JambCalcs_SortOrd4 := JambSortedOrder[4];
+Debug_JambCalcs_SortOrd5 := JambSortedOrder[5];
+Debug_JambCalcs_SortOrd6 := JambSortedOrder[6];
+
+(* OPZone (zone for each operation in sequence) *)
+Debug_JambCalcs_OPZone1 := JambOPZone[1];
+Debug_JambCalcs_OPZone2 := JambOPZone[2];
+Debug_JambCalcs_OPZone3 := JambOPZone[3];
+Debug_JambCalcs_OPZone4 := JambOPZone[4];
+Debug_JambCalcs_OPZone5 := JambOPZone[5];
+Debug_JambCalcs_OPZone6 := JambOPZone[6];
+
+(* Shuttle Positions *)
+Debug_JambCalcs_S1Pos1 := S1JambOperationPositionArray[1];
+Debug_JambCalcs_S1Pos2 := S1JambOperationPositionArray[2];
+Debug_JambCalcs_S1Pos3 := S1JambOperationPositionArray[3];
+Debug_JambCalcs_S1Pos4 := S1JambOperationPositionArray[4];
+Debug_JambCalcs_S1Pos5 := S1JambOperationPositionArray[5];
+Debug_JambCalcs_S1Pos6 := S1JambOperationPositionArray[6];
+
+Debug_JambCalcs_S2Pos1 := S2JambOperationPositionArray[1];
+Debug_JambCalcs_S2Pos2 := S2JambOperationPositionArray[2];
+Debug_JambCalcs_S2Pos3 := S2JambOperationPositionArray[3];
+Debug_JambCalcs_S2Pos4 := S2JambOperationPositionArray[4];
+Debug_JambCalcs_S2Pos5 := S2JambOperationPositionArray[5];
+Debug_JambCalcs_S2Pos6 := S2JambOperationPositionArray[6];
