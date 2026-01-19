@@ -1,0 +1,171 @@
+(* ---- Edges ---- *)
+CaseStart1(CLK := TestST);
+StepEnterTrig(CLK := (CurrentStep <> LastStep));
+Step20Enter(CLK := (CurrentStep = 20));
+Step30Enter(CLK := (CurrentStep = 30));
+Step40Enter(CLK := (CurrentStep = 40));
+S1_EOP_ToggleTrig(CLK := FI_OPERATION_FIN);
+S2ArrivedEdge(CLK := S2_AtOPPOS_Latched);
+
+(* ---- Timers for pulses ---- *)
+ShuffleTimer(IN := Step20Enter.Q, PT := T#1s);
+S2MoveTimer(IN := Step30Enter.Q, PT := T#1s);
+S1MoveTimer(IN := S2ArrivedEdge.Q, PT := T#1s);
+
+(* ---- Start / Reset ---- *)
+IF CaseStart1.Q THEN
+    OperationIndex := 1;
+    CurrentStep    := 10;
+END_IF;
+
+IF RESET_BIT THEN
+    CurrentStep    := 0;
+    ROBOTBITOUT    := FALSE;
+    ShuffleStart   := FALSE;
+    S1_ToOpPos     := FALSE;
+    S2_ToOpPos     := FALSE;
+    OpposReached   := FALSE;
+    S1_AtOPPOS_Latched := FALSE;
+    S2_AtOPPOS_Latched := FALSE;
+    InternalS1MoveIssued := FALSE;
+    InternalS2MoveIssued := FALSE;
+    TestST := FALSE;
+END_IF;
+
+(* ---- Clear if we issued the move ---- *)
+IF (CurrentStep <> 30) AND InternalS1MoveIssued THEN
+    S1_ToOpPos := FALSE;
+    InternalS1MoveIssued := FALSE;
+END_IF;
+IF (CurrentStep <> 30) AND InternalS2MoveIssued THEN
+    S2_ToOpPos := FALSE;
+    InternalS2MoveIssued := FALSE;
+END_IF;
+
+(* ---- Step entry one-shots / housekeeping ---- *)
+IF StepEnterTrig.Q THEN
+    CASE CurrentStep OF
+        10: 
+            Trig_ProcTester(CLK := ProcessTester);
+            IF Trig_ProcTester.Q THEN
+                ROBOTSTARTCYCLE := TRUE;
+            ELSE
+                ROBOTSTARTCYCLE := FALSE;
+            END_IF;
+
+        30: (* clear flags on entering 30 *)
+            S1_AtOPPOS_Latched := FALSE;
+            S2_AtOPPOS_Latched := FALSE;
+            OpposReached       := FALSE;
+            InternalS1MoveIssued := FALSE;
+            InternalS2MoveIssued := FALSE;
+    END_CASE;
+
+    LastStep := CurrentStep;
+END_IF;
+
+(* ---- Latch noisy OPPOS signals ---- *)
+IF S1_AtOPPOS THEN
+    S1_AtOPPOS_Latched := TRUE;
+END_IF;
+IF S2_AtOPPOS THEN
+    S2_AtOPPOS_Latched := TRUE;
+END_IF;
+
+(* ---- Present robot-zone bits for the active op ---- *)
+IF CurrentStep = 40 THEN
+    S1_AtOPPOS_Latched := FALSE;
+    S2_AtOPPOS_Latched := FALSE;
+
+    FO_STEPBIT1 := ROBOTBITOUT AND (OPZone[OperationIndex] = 1);
+    FO_STEPBIT2 := ROBOTBITOUT AND (OPZone[OperationIndex] = 2);
+    FO_STEPBIT3 := ROBOTBITOUT AND (OPZone[OperationIndex] = 3);
+    FO_STEPBIT4 := ROBOTBITOUT AND (OPZone[OperationIndex] = 4);
+    FO_STEPBIT5 := ROBOTBITOUT AND (OPZone[OperationIndex] = 5);
+    FO_STEPBIT6 := ROBOTBITOUT AND (OPZone[OperationIndex] = 6);
+    FO_STEPBIT7 := ROBOTBITOUT AND (OPZone[OperationIndex] = 7);
+    FO_STEPBIT8 := ROBOTBITOUT AND (OPZone[OperationIndex] = 8);
+ELSE
+    FO_STEPBIT1 := FALSE; FO_STEPBIT2 := FALSE; FO_STEPBIT3 := FALSE; FO_STEPBIT4 := FALSE;
+    FO_STEPBIT5 := FALSE; FO_STEPBIT6 := FALSE; FO_STEPBIT7 := FALSE; FO_STEPBIT8 := FALSE;
+END_IF;
+
+(* ---- Force S2 to lead in Step 30 ---- *)
+IF CurrentStep = 30 THEN
+    LeadCode := 2;
+END_IF;
+
+(* ====================== STATE MACHINE ====================== *)
+CASE CurrentStep OF
+
+    0:  (* idle *)
+        OperationNumber := OperationIndex;
+        PROCESSTESTER := FALSE;
+
+    10: (* OP INIT *)
+        OperationNumber := OperationIndex;
+        NextPositionDistance := REAL_TO_LREAL(DrillPlanOffsets[OperationIndex]);
+        CurrentStep := 20;
+
+    20:  (* SHUFFLE to next setup *)
+        OperationNumber := OperationIndex;
+
+        (* one-scan pulse on entry *)
+        ShuffleStart := Step20Enter.Q;
+
+        IF ShuffleOPDone THEN
+            CurrentStep := 30;
+        END_IF;
+
+    30: (* MOVE TO OPPOS — S2 leads, S1 follows *)
+        OperationNumber := OperationIndex;
+
+        (* pulse when entering step 30 *)
+        S2_ToOpPos := Step30Enter.Q;
+        IF Step30Enter.Q THEN
+            InternalS2MoveIssued := TRUE;
+        END_IF;
+
+        (* pulse when S2 arrives *)
+        S1_ToOpPos := S2ArrivedEdge.Q;
+        IF S2ArrivedEdge.Q THEN
+            InternalS1MoveIssued := TRUE;
+        END_IF;
+
+        IF S1_AtOPPOS_Latched AND S2_AtOPPOS_Latched THEN
+            CurrentStep := 40;
+        END_IF;
+
+    40: (* ROBOT OP for current op *)
+        OperationNumber := OperationIndex;
+        ROBOTBITOUT := TRUE;
+        ROBOTSTARTCYCLE := Step40Enter.Q;
+
+        CurrentOpZone := OPZone[OperationIndex];
+        FO_STEPBIT1 := ROBOTBITOUT AND (CurrentOpZone = 1);
+        FO_STEPBIT2 := ROBOTBITOUT AND (CurrentOpZone = 2);
+        FO_STEPBIT3 := ROBOTBITOUT AND (CurrentOpZone = 3);
+        FO_STEPBIT4 := ROBOTBITOUT AND (CurrentOpZone = 4);
+
+        IF S1_EOP_ToggleTrig.Q THEN
+            ROBOTBITOUT := FALSE;
+            CurrentStep := 50;
+        END_IF;
+
+    50: (* MOVE SHUTTLE 1 TO EOP *)
+        OperationNumber := OperationIndex;
+        S1_TO_EOP := TRUE;
+
+        IF S1_AT_EOP THEN
+            S1_TO_EOP := FALSE;
+            OperationIndex := OperationIndex + 1;
+
+            IF (OperationIndex > OperationCount) OR (OPZone[OperationIndex] = 0) THEN
+                CurrentStep := 0;
+                PROCESSTESTER := FALSE;
+            ELSE
+                CurrentStep := 10;
+            END_IF;
+        END_IF;
+
+END_CASE;
