@@ -1,0 +1,56 @@
+(*Added part length memory function 1/5/26*)
+MemoryLoad(CLK:=HMI_ParametersLoad);
+MemoryComplete(CLK := PART_COMPLETE);
+PartLength  := (_Modbus_Input_Partlength);
+IF MemoryLoad.Q THEN
+PartLengthMem := PartLength;
+END_IF;
+IF MemoryComplete.Q OR RESET_BIT OR MemoryRelease THEN
+PartLengthMem := REAL#0.0;
+END_IF;
+
+
+IF Hinged = TRUE AND HingeQuant > INT#1 THEN
+    TotalGapLength := PartlengthMem  - ((HingeOffset * 2.0)+(INT_TO_REAL(HingeQuant) * HingeWidth));
+    HingeSpacing := TotalGapLength / INT_TO_REAL(HingeQuant - 1);
+ELSE
+    HingeSpacing := REAL#0.0;
+END_IF;
+
+(* Initialize hinge positions based on quantity *)
+Hinge1Position := REAL#0.0;
+Hinge2Position := REAL#0.0;
+Hinge3Position := REAL#0.0;
+Hinge4Position := REAL#0.0;
+Hinge5Position := REAL#0.0;
+Hinge6Position := REAL#0.0;
+
+(* Assign hinge positions if hinged *)
+IF Hinged = TRUE THEN
+    IF HingeQuant >= INT#1 THEN
+        Hinge1Position := HingeOffset;
+    END_IF;
+    IF HingeQuant >= INT#2 THEN
+        Hinge2Position := Hinge1Position + HingeWidth + HingeSpacing;
+    END_IF;
+    IF HingeQuant >= INT#3 THEN
+        Hinge3Position := Hinge2Position + HingeWidth + HingeSpacing;
+    END_IF;
+    IF HingeQuant >= INT#4 THEN
+        Hinge4Position := Hinge3Position + HingeWidth + HingeSpacing;
+    END_IF;
+    IF HingeQuant >= INT#5 THEN
+        Hinge5Position := Hinge4Position + HingeWidth + HingeSpacing;
+    END_IF;
+    IF HingeQuant >= INT#6 THEN
+        Hinge6Position := Hinge5Position + HingeWidth + HingeSpacing;
+    END_IF;
+END_IF;
+
+(* Assign hinge locations array *)
+HingeLocations[1] := Hinge1Position;
+HingeLocations[2] := Hinge2Position;
+HingeLocations[3] := Hinge3Position;
+HingeLocations[4] := Hinge4Position;
+HingeLocations[5] := Hinge5Position;
+HingeLocations[6] := Hinge6Position;
