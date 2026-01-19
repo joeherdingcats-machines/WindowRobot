@@ -1,0 +1,301 @@
+(* ----converted from DrillOptimizer for Jambs ---- *)
+
+(* Hinge 1 *)
+IF HingeQuant >= 1 THEN
+    BestAbsOffset := 9999.0;
+    BestOffset := 0.0;
+    JambDrillPlanDrillIndex[1] := 0;
+
+    TempOffset := JambMillPosition1Offset - JambHingeLocations[1];
+    IF ABS(TempOffset) < BestAbsOffset THEN
+        BestOffset := TempOffset; BestAbsOffset := ABS(TempOffset);
+        JambDrillPlanDrillIndex[1] := 1;
+    END_IF;
+
+    TempOffset := JambMillPosition2Offset - JambHingeLocations[1];
+    IF ABS(TempOffset) < BestAbsOffset THEN
+        BestOffset := TempOffset; BestAbsOffset := ABS(TempOffset);
+        JambDrillPlanDrillIndex[1] := 2;
+    END_IF;
+
+    TempOffset := JambMillPosition3Offset - JambHingeLocations[1];
+    IF ABS(TempOffset) < BestAbsOffset THEN
+        BestOffset := TempOffset; BestAbsOffset := ABS(TempOffset);
+        JambDrillPlanDrillIndex[1] := 3;
+    END_IF;
+
+    TempOffset := JambMillPosition4Offset - JambHingeLocations[1];
+    IF ABS(TempOffset) < BestAbsOffset THEN
+        BestOffset := TempOffset; BestAbsOffset := ABS(TempOffset);
+        JambDrillPlanDrillIndex[1] := 4;
+    END_IF;
+
+    TempOffset := JambMillPosition5Offset - JambHingeLocations[1];
+    IF ABS(TempOffset) < BestAbsOffset THEN
+        BestOffset := TempOffset; BestAbsOffset := ABS(TempOffset);
+        JambDrillPlanDrillIndex[1] := 5;
+    END_IF;
+
+    TempOffset := JambMillPosition6Offset - JambHingeLocations[1];
+    IF ABS(TempOffset) < BestAbsOffset THEN
+        BestOffset := TempOffset; BestAbsOffset := ABS(TempOffset);
+        JambDrillPlanDrillIndex[1] := 6;
+    END_IF;
+
+    JambDrillPlanOffsets[1]    := BestOffset;
+    JambDrillPlanHingeIndex[1] := 1;
+ELSE
+    JambDrillPlanDrillIndex[1] := 0;
+    JambDrillPlanOffsets[1]    := 0.0;
+    JambDrillPlanHingeIndex[1] := 0;
+END_IF;
+
+(* Hinge 2 *)
+IF HingeQuant >= 2 THEN
+    BestAbsOffset := 9999.0;
+    BestOffset := 0.0;
+    JambDrillPlanDrillIndex[2] := 0;
+
+    TempOffset := JambMillPosition1Offset - JambHingeLocations[2];
+    IF ABS(TempOffset) < BestAbsOffset THEN
+        BestOffset := TempOffset; BestAbsOffset := ABS(TempOffset);
+        JambDrillPlanDrillIndex[2] := 1;
+    END_IF;
+
+    TempOffset := JambMillPosition2Offset - JambHingeLocations[2];
+    IF ABS(TempOffset) < BestAbsOffset THEN
+        BestOffset := TempOffset; BestAbsOffset := ABS(TempOffset);
+        JambDrillPlanDrillIndex[2] := 2;
+    END_IF;
+
+    TempOffset := JambMillPosition3Offset - JambHingeLocations[2];
+    IF ABS(TempOffset) < BestAbsOffset THEN
+        BestOffset := TempOffset; BestAbsOffset := ABS(TempOffset);
+        JambDrillPlanDrillIndex[2] := 3;
+    END_IF;
+
+    TempOffset := JambMillPosition4Offset - JambHingeLocations[2];
+    IF ABS(TempOffset) < BestAbsOffset THEN
+        BestOffset := TempOffset; BestAbsOffset := ABS(TempOffset);
+        JambDrillPlanDrillIndex[2] := 4;
+    END_IF;
+
+    TempOffset := JambMillPosition5Offset - JambHingeLocations[2];
+    IF ABS(TempOffset) < BestAbsOffset THEN
+        BestOffset := TempOffset; BestAbsOffset := ABS(TempOffset);
+        JambDrillPlanDrillIndex[2] := 5;
+    END_IF;
+
+    TempOffset := JambMillPosition6Offset - JambHingeLocations[2];
+    IF ABS(TempOffset) < BestAbsOffset THEN
+        BestOffset := TempOffset; BestAbsOffset := ABS(TempOffset);
+        JambDrillPlanDrillIndex[2] := 6;
+    END_IF;
+
+    JambDrillPlanOffsets[2]    := BestOffset;
+    JambDrillPlanHingeIndex[2] := 2;
+ELSE
+    JambDrillPlanDrillIndex[2] := 0;
+    JambDrillPlanOffsets[2]    := 0.0;
+    JambDrillPlanHingeIndex[2] := 0;
+END_IF;
+
+(* Hinge 3 *)
+IF HingeQuant >= 3 THEN
+    BestAbsOffset := 9999.0;
+    BestOffset := 0.0;
+    JambDrillPlanDrillIndex[3] := 0;
+
+    TempOffset := JambMillPosition1Offset - JambHingeLocations[3];
+    IF ABS(TempOffset) < BestAbsOffset THEN
+        BestOffset := TempOffset; BestAbsOffset := ABS(TempOffset);
+        JambDrillPlanDrillIndex[3] := 1;
+    END_IF;
+
+    TempOffset := JambMillPosition2Offset - JambHingeLocations[3];
+    IF ABS(TempOffset) < BestAbsOffset THEN
+        BestOffset := TempOffset; BestAbsOffset := ABS(TempOffset);
+        JambDrillPlanDrillIndex[3] := 2;
+    END_IF;
+
+    TempOffset := JambMillPosition3Offset - JambHingeLocations[3];
+    IF ABS(TempOffset) < BestAbsOffset THEN
+        BestOffset := TempOffset; BestAbsOffset := ABS(TempOffset);
+        JambDrillPlanDrillIndex[3] := 3;
+    END_IF;
+
+    TempOffset := JambMillPosition4Offset - JambHingeLocations[3];
+    IF ABS(TempOffset) < BestAbsOffset THEN
+        BestOffset := TempOffset; BestAbsOffset := ABS(TempOffset);
+        JambDrillPlanDrillIndex[3] := 4;
+    END_IF;
+
+    TempOffset := JambMillPosition5Offset - JambHingeLocations[3];
+    IF ABS(TempOffset) < BestAbsOffset THEN
+        BestOffset := TempOffset; BestAbsOffset := ABS(TempOffset);
+        JambDrillPlanDrillIndex[3] := 5;
+    END_IF;
+
+    TempOffset := JambMillPosition6Offset - JambHingeLocations[3];
+    IF ABS(TempOffset) < BestAbsOffset THEN
+        BestOffset := TempOffset; BestAbsOffset := ABS(TempOffset);
+        JambDrillPlanDrillIndex[3] := 6;
+    END_IF;
+
+    JambDrillPlanOffsets[3]    := BestOffset;
+    JambDrillPlanHingeIndex[3] := 3;
+ELSE
+    JambDrillPlanDrillIndex[3] := 0;
+    JambDrillPlanOffsets[3]    := 0.0;
+    JambDrillPlanHingeIndex[3] := 0;
+END_IF;
+
+(* Hinge 4 *)
+IF HingeQuant >= 4 THEN
+    BestAbsOffset := 9999.0;
+    BestOffset := 0.0;
+    JambDrillPlanDrillIndex[4] := 0;
+
+    TempOffset := JambMillPosition1Offset - JambHingeLocations[4];
+    IF ABS(TempOffset) < BestAbsOffset THEN
+        BestOffset := TempOffset; BestAbsOffset := ABS(TempOffset);
+        JambDrillPlanDrillIndex[4] := 1;
+    END_IF;
+
+    TempOffset := JambMillPosition2Offset - JambHingeLocations[4];
+    IF ABS(TempOffset) < BestAbsOffset THEN
+        BestOffset := TempOffset; BestAbsOffset := ABS(TempOffset);
+        JambDrillPlanDrillIndex[4] := 2;
+    END_IF;
+
+    TempOffset := JambMillPosition3Offset - JambHingeLocations[4];
+    IF ABS(TempOffset) < BestAbsOffset THEN
+        BestOffset := TempOffset; BestAbsOffset := ABS(TempOffset);
+        JambDrillPlanDrillIndex[4] := 3;
+    END_IF;
+
+    TempOffset := JambMillPosition4Offset - JambHingeLocations[4];
+    IF ABS(TempOffset) < BestAbsOffset THEN
+        BestOffset := TempOffset; BestAbsOffset := ABS(TempOffset);
+        JambDrillPlanDrillIndex[4] := 4;
+    END_IF;
+
+    TempOffset := JambMillPosition5Offset - JambHingeLocations[4];
+    IF ABS(TempOffset) < BestAbsOffset THEN
+        BestOffset := TempOffset; BestAbsOffset := ABS(TempOffset);
+        JambDrillPlanDrillIndex[4] := 5;
+    END_IF;
+
+    TempOffset := JambMillPosition6Offset - JambHingeLocations[4];
+    IF ABS(TempOffset) < BestAbsOffset THEN
+        BestOffset := TempOffset; BestAbsOffset := ABS(TempOffset);
+        JambDrillPlanDrillIndex[4] := 6;
+    END_IF;
+
+    JambDrillPlanOffsets[4]    := BestOffset;
+    JambDrillPlanHingeIndex[4] := 4;
+ELSE
+    JambDrillPlanDrillIndex[4] := 0;
+    JambDrillPlanOffsets[4]    := 0.0;
+    JambDrillPlanHingeIndex[4] := 0;
+END_IF;
+
+(* Hinge 5 *)
+IF HingeQuant >= 5 THEN
+    BestAbsOffset := 9999.0;
+    BestOffset := 0.0;
+    JambDrillPlanDrillIndex[5] := 0;
+
+    TempOffset := JambMillPosition1Offset - JambHingeLocations[5];
+    IF ABS(TempOffset) < BestAbsOffset THEN
+        BestOffset := TempOffset; BestAbsOffset := ABS(TempOffset);
+        JambDrillPlanDrillIndex[5] := 1;
+    END_IF;
+
+    TempOffset := JambMillPosition2Offset - JambHingeLocations[5];
+    IF ABS(TempOffset) < BestAbsOffset THEN
+        BestOffset := TempOffset; BestAbsOffset := ABS(TempOffset);
+        JambDrillPlanDrillIndex[5] := 2;
+    END_IF;
+
+    TempOffset := JambMillPosition3Offset - JambHingeLocations[5];
+    IF ABS(TempOffset) < BestAbsOffset THEN
+        BestOffset := TempOffset; BestAbsOffset := ABS(TempOffset);
+        JambDrillPlanDrillIndex[5] := 3;
+    END_IF;
+
+    TempOffset := JambMillPosition4Offset - JambHingeLocations[5];
+    IF ABS(TempOffset) < BestAbsOffset THEN
+        BestOffset := TempOffset; BestAbsOffset := ABS(TempOffset);
+        JambDrillPlanDrillIndex[5] := 4;
+    END_IF;
+
+    TempOffset := JambMillPosition5Offset - JambHingeLocations[5];
+    IF ABS(TempOffset) < BestAbsOffset THEN
+        BestOffset := TempOffset; BestAbsOffset := ABS(TempOffset);
+        JambDrillPlanDrillIndex[5] := 5;
+    END_IF;
+
+    TempOffset := JambMillPosition6Offset - JambHingeLocations[5];
+    IF ABS(TempOffset) < BestAbsOffset THEN
+        BestOffset := TempOffset; BestAbsOffset := ABS(TempOffset);
+        JambDrillPlanDrillIndex[5] := 6;
+    END_IF;
+
+    JambDrillPlanOffsets[5]    := BestOffset;
+    JambDrillPlanHingeIndex[5] := 5;
+ELSE
+    JambDrillPlanDrillIndex[5] := 0;
+    JambDrillPlanOffsets[5]    := 0.0;
+    JambDrillPlanHingeIndex[5] := 0;
+END_IF;
+
+(* Hinge 6 *)
+IF HingeQuant >= 6 THEN
+    BestAbsOffset := 9999.0;
+    BestOffset := 0.0;
+    JambDrillPlanDrillIndex[6] := 0;
+
+    TempOffset := JambMillPosition1Offset - JambHingeLocations[6];
+    IF ABS(TempOffset) < BestAbsOffset THEN
+        BestOffset := TempOffset; BestAbsOffset := ABS(TempOffset);
+        JambDrillPlanDrillIndex[6] := 1;
+    END_IF;
+
+    TempOffset := JambMillPosition2Offset - JambHingeLocations[6];
+    IF ABS(TempOffset) < BestAbsOffset THEN
+        BestOffset := TempOffset; BestAbsOffset := ABS(TempOffset);
+        JambDrillPlanDrillIndex[6] := 2;
+    END_IF;
+
+    TempOffset := JambMillPosition3Offset - JambHingeLocations[6];
+    IF ABS(TempOffset) < BestAbsOffset THEN
+        BestOffset := TempOffset; BestAbsOffset := ABS(TempOffset);
+        JambDrillPlanDrillIndex[6] := 3;
+    END_IF;
+
+    TempOffset := JambMillPosition4Offset - JambHingeLocations[6];
+    IF ABS(TempOffset) < BestAbsOffset THEN
+        BestOffset := TempOffset; BestAbsOffset := ABS(TempOffset);
+        JambDrillPlanDrillIndex[6] := 4;
+    END_IF;
+
+    TempOffset := JambMillPosition5Offset - JambHingeLocations[6];
+    IF ABS(TempOffset) < BestAbsOffset THEN
+        BestOffset := TempOffset; BestAbsOffset := ABS(TempOffset);
+        JambDrillPlanDrillIndex[6] := 5;
+    END_IF;
+
+    TempOffset := JambMillPosition6Offset - JambHingeLocations[6];
+    IF ABS(TempOffset) < BestAbsOffset THEN
+        BestOffset := TempOffset; BestAbsOffset := ABS(TempOffset);
+        JambDrillPlanDrillIndex[6] := 6;
+    END_IF;
+
+    JambDrillPlanOffsets[6]    := BestOffset;
+    JambDrillPlanHingeIndex[6] := 6;
+ELSE
+    JambDrillPlanDrillIndex[6] := 0;
+    JambDrillPlanOffsets[6]    := 0.0;
+    JambDrillPlanHingeIndex[6] := 0;
+END_IF;
