@@ -1,0 +1,150 @@
+(*Added part length memory function 1/5/26*)
+MemoryLoad(CLK:=HMI_ParametersLoad);
+MemoryComplete(CLK := PART_COMPLETE);
+
+PartLength := (_Modbus_Input_Partlength);
+IF MemoryLoad.Q THEN
+PartLengthMem := PartLength;
+END_IF;
+IF MemoryComplete.Q OR RESET_BIT OR MemoryRelease THEN
+PartLengthMem := REAL#0.0;
+END_IF;
+
+
+IF GRIPFROMOPPOS = TRUE THEN
+(*Determine next distance offset*)
+	NextDistanceOffset := (LREAL_TO_REAL(NextPositionDistance) - (TotalOffset));
+	IF NextDistanceOffset = REAL#0.0 THEN
+		NoShuffleDelta := TRUE;
+	ELSIF NextDistanceOffset <> REAL#0.0 THEN
+		NoShuffleDelta := FALSE;
+	END_IF;
+(*Populate CycleOffsetSum - or the total amount of offset of the part at each drilling step*)
+	CycleOffsetSum[1] := HingeDrillOffset[1];
+	CycleOffsetSumInternal[1] := CycleOffsetSum[1];
+
+	FOR i := 2 TO 6 DO
+    	IF HingeQuant >= i THEN
+        	prev := i - 1;
+        	CycleOffsetSum[i] := CycleOffsetSum[prev] + HingeDrillOffset[i];
+        	CycleOffsetSumInternal[i] := CycleOffsetSum[i];
+    	ELSE
+        	CycleOffsetSum[i] := 0.0;
+    	END_IF;
+	END_FOR;
+
+(*Determine Available Positive space -S2 to S1*)
+	S2_MaxPosition := S1_CurrentPosition_Shuffles - MinDistance;
+	S2PositiveSpace := S2_MaxPosition - S2_CurrentPosition_Shuffles;
+	S1_MinPosition := S2_CurrentPosition_Shuffles + MinDistance;
+(*Determine Available Negative space -S2 to S3*)
+	S2NegativeSpace := S2_CurrentPosition_Shuffles - S2_MinPosition;
+(*Determine Available Space to Shift - S2 Free*)
+	MaxShuffle := S2NegativeSpace + S2PositiveSpace;
+	MaxPositiveShuffle := S2PositiveSpace;
+	MaxNegativeShuffle := S2NegativeSpace;
+(*Determine offset steps*)
+	IF ABS(NextDistanceOffset) >= MaxShuffle THEN
+(*Ceiling*)
+		ShuffleQuant := (ABS(REAL_TO_INT(NextDistanceOffset / MaxShuffle)))+ 1;
+	ELSE
+		ShuffleQuant := 1;
+	END_IF; 
+	IF ShuffleQuant >= 1 THEN
+		ShuffleDistances := NextDistanceOffset / INT_TO_REAL(ShuffleQuant);
+	END_IF;
+(*Directionality*)
+	IF ShuffleDistances > REAL#0.01 THEN
+		PositiveShift := TRUE;
+		NegativeShift := FALSE;
+	END_IF;
+	IF ShuffleDistances < REAL#-0.01 THEN
+		PositiveShift := FALSE;
+		NegativeShift := TRUE;
+	END_IF;
+(* Grip positions *)
+	IF ShuffleQuant >= 1 AND PositiveShift = TRUE AND S2_CurrentPosition_Shuffles + NextDistanceOffset <= S2_MaxPosition THEN
+		S2GripPosition := S2_CurrentPosition_Shuffles;
+		S2ReleasePositon := S2_CurrentPosition_Shuffles + ShuffleDistances;
+	ELSIF ShuffleQuant >= 1 AND PositiveShift = TRUE AND S2_CurrentPosition_Shuffles + NextDistanceOffset >= S2_MaxPosition THEN
+		S2GripPosition := S2_CurrentPosition_Shuffles - NextDistanceOffset -50.0;
+		S2ReleasePositon := S2GripPosition + NextDistanceOffset;
+	END_IF;
+	IF ShuffleQuant >= 1 AND PositiveShift = FALSE AND S2_CurrentPosition_Shuffles - ABS(NextDistanceOffset) <= S2_MinPosition THEN
+		S2GripPosition := S2_CurrentPosition_Shuffles + ABS(NextDistanceOffset) + 30.0 ;
+		S2ReleasePositon := S2GripPosition - ABS(NextDistanceOffset);
+	ELSIF ShuffleQuant >= 1 AND PositiveShift = FALSE AND S2_CurrentPosition_Shuffles - ABS(NextDistanceOffset) >= S2_MinPosition THEN
+		S2GripPosition := S2_CurrentPosition_Shuffles;
+		S2ReleasePositon := S2_CurrentPosition_Shuffles - ABS(NextDistanceOffset);
+	END_IF;
+
+(*S1 Relocation Positions   - S1_FollowStepPosition is calculated if the distance of the offset brings the part inside of the S1 max position - or position based on drill offset*)
+	OffsetSum := 0.0;
+	FOR i := 1 TO 6 DO
+	    IF HingeQuant >= i THEN
+    	    OffsetSum := OffsetSum + HingeDrillOffset[i];
+    	    IF ABS(OffsetSum) >= PartlengthMem  - S1_MaxPosition THEN
+				S1_FollowStepPosition[i] := PartlengthMem  - S1_PartFollowDimension + OffsetSum;
+    			ELSE 
+					S1_FollowStepPosition[i] := S1_MaxPosition;
+			END_IF;
+		ELSE
+        	S1_FollowStepPosition[i] := 0.0;
+    	END_IF;
+	END_FOR;
+(*Determine if S1 is following or Max*)
+	IF S1_MaxPosition <= (PartlengthMem  - TotalOffset) THEN
+		S1_Following := FALSE;
+	ELSIF S1_MaxPosition >= (PartlengthMem  - TotalOffset) THEN
+	S1_Following := TRUE;
+	END_IF;
+(*Determine where S1 is going*)
+	IF S1_Following = FALSE THEN
+		S1_Operation_Position := S1_MaxPosition;
+	ELSE
+		IF NextDistanceOffset - PartlengthMem  >= S1_MaxPosition THEN
+			S1_Operation_Position := S1_MaxPosition;
+		ELSE;
+			S1_Operation_Position := (PartlengthMem  - TotalOffset -3.0);
+		END_IF;
+	END_IF;
+
+(*Determine if S1 is excluded)
+
+(*Determine Available Space For Shifting between phases*)
+	FOR i := 1 TO 6 DO
+    	IF HingeQuant >= i THEN
+        	ShiftingAvailableSpace[i] := S1_FollowStepPosition[i] - (S1_PartFollowDimension + MinDistance + S2_MinPosition);
+    	END_IF;
+	END_FOR;
+
+	FOR i := 1 TO 6 DO
+    	IF DrillPlanDrillIndex[i] = 3 THEN
+        	S1_Cycle_Position[i] := LHSashDrillPosition3 + S1OffsetFromDrillOp;
+    	ELSIF DrillPlanDrillIndex[i] = 4 THEN 
+        	S1_Cycle_Position[i] := LHSashDrillPosition4 + S1OffsetFromDrillOp;
+   		ELSIF DrillPlanDrillIndex[i] <= 2 THEN
+        	S1_Cycle_Position[i] := PartlengthMem  + CycleOffsetSum[i];
+    	ELSIF DrillPlanDrillIndex[i] = 0 THEN
+			S1_Cycle_Position[i] := S1_MaxPosition;
+		END_IF;
+
+    	IF S1_Cycle_Position[i] > S1_MaxPosition THEN
+        	S1_Cycle_Position[i] := S1_MaxPosition;
+    	END_IF;
+	END_FOR;
+
+	FOR i := 1 TO 6 DO
+    	IF DrillPlanDrillIndex[i] = 3 THEN
+        	S2_Cycle_Position[i] := LHSashDrillPosition3 - S2OffsetFromDrillOp;
+   		ELSIF DrillPlanDrillIndex[i] = 4 THEN 
+        	S2_Cycle_Position[i] := LHSashDrillPosition4 - S2OffsetFromDrillOp;
+    	ELSIF DrillPlanDrillIndex[i] = 2 THEN
+        	S2_Cycle_Position[i] := LHSashDrillPosition2 + S2OffsetFromDrillOp;
+    	ELSIF DrillPlanDrillIndex[i] = 1 THEN
+			S2_Cycle_Position[i] := S2_MinPosition;
+		ELSIF DrillPlanDrillIndex[i] = 0 THEN
+			S2_Cycle_Position[i] := S2_MinPosition;       
+    	END_IF;
+	END_FOR;
+END_IF;
