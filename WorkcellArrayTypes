@@ -1,0 +1,198 @@
+TYPE
+    (* ========================================== *)
+    (* WORKCELL ARRAY TYPES - Consolidated from Multiple Sheets *)
+    (* ========================================== *)
+
+    (* ---- ORIGINAL HINGE ARRAYS ---- *)
+    HingeDrillOffset : ARRAY [1..6] OF REAL;
+    S1_FollowStepPosition : ARRAY [1..6] OF REAL;
+    ShiftingAvailableSpace : ARRAY [1..6] OF REAL;
+    S1ExcludedFromOP : ARRAY [1..6] OF BOOL;
+    S1AtMax : ARRAY [1..6] OF BOOL;
+    CycleOffsetSum : ARRAY [ 1..6] OF REAL;
+    CycleOffsetSumInternal : ARRAY [ 1..6] OF REAL;
+    S1_Cycle_Position: ARRAY [1..6] OF REAL;
+    S2_Cycle_Position: ARRAY [1..6] OF REAL;
+
+    (* ---- JAMB ARRAYS ---- *)
+    JambHingeLocations : ARRAY[1..6] OF REAL;
+    JambDrillPositions : ARRAY[1..3] OF REAL;
+    JambDrillPlanOffsets : ARRAY[1..6] OF REAL;
+    JambDrillPlanHingeIndex : ARRAY[1..6] OF INT;
+    JambDrillPlanDrillIndex : ARRAY[1..6] OF INT;
+    JambTempOffsets : ARRAY[1..6] OF REAL;
+    JambTempDrillIndex : ARRAY[1..6] OF INT;
+    JambTempHingeIndex : ARRAY[1..6] OF INT;
+    JambUsedForSort : ARRAY[1..6] OF BOOL;
+    JambDrillSequence : ARRAY[1..6] OF INT;
+    JambSortedHingeOrder : ARRAY[1..6] OF INT;
+    JambTempSortOffsets : ARRAY[1..6] OF REAL;
+    JambTempSortIndices : ARRAY[1..6] OF INT;
+
+    (* ---- DRILL POSITION AND OPERATION ZONE ARRAYS ---- *)
+    S2_HingeDrillPosition : ARRAY [1..32] OF REAL;
+    S1_HingeDrillPosition : ARRAY [1..32] OF REAL;
+    DrillPosition : ARRAY [1..6] OF REAL;
+    OPZone : ARRAY [0..32] OF INT;
+    DrillPlanDrillIndex : ARRAY[1..6] OF INT;
+    DrillPlanHingeIndex : ARRAY[1..6] OF INT;
+    DrillPlanOffsets : ARRAY[0..6] OF REAL;
+    DrillPositions : ARRAY[1..6] OF REAL;
+    HingeLocations : ARRAY[1..6] OF REAL;
+
+    (* ---- HINGE DRILLING SPECIFIC POSITIONS ---- *)
+    (* Only for parts that actually get hinge drilling operations *)
+
+    (* SASH DRILL POSITIONS - Both LH and RH *)
+    LHSashDrillPosition3 : REAL;
+    LHSashDrillPosition4 : REAL;
+    LHSashDrillPosition5 : REAL;
+    LHSashDrillPosition6 : REAL;
+    LHSashDrillPosition2 : REAL;
+    RHSashDrillPosition3 : REAL;
+    RHSashDrillPosition4 : REAL;
+    RHSashDrillPosition5 : REAL;
+    RHSashDrillPosition6 : REAL;
+    RHSashDrillPosition2 : REAL;
+
+    (* HINGED JAMB DRILL POSITIONS - Both LH and RH *)
+    LHHJDrillPos3 : REAL;
+    LHHJDrillPos4 : REAL;
+    LHHJDrillPos5 : REAL;
+    LHHJDrillPos6 : REAL;
+    LHHJDrillPos2 : REAL;
+    RHHJDrillPos3 : REAL;
+    RHHJDrillPos4 : REAL;
+    RHHJDrillPos5 : REAL;
+    RHHJDrillPos6 : REAL;
+    RHHJDrillPos2 : REAL;
+
+    (* HINGED STILE DRILL POSITIONS - Both LH and RH *)
+    LHHSDrillPos3 : REAL;
+    LHHSDrillPos4 : REAL;
+    LHHSDrillPos5 : REAL;
+    LHHSDrillPos6 : REAL;
+    LHHSDrillPos2 : REAL;
+    RHHSDrillPos3 : REAL;
+    RHHSDrillPos4 : REAL;
+    RHHSDrillPos5 : REAL;
+    RHHSDrillPos6 : REAL;
+    RHHSDrillPos2 : REAL;
+
+
+    (* ---- SHUFFLE AND MOVEMENT ARRAYS ---- *)
+    ShuffleDistanceArray : ARRAY [1..64] OF REAL;
+
+    (* ---- GENERAL SORTING ARRAYS ---- *)
+    SortedHingeOrder : ARRAY[1..6] OF INT;
+    TempSortOffsets : ARRAY[1..6] OF REAL;
+    TempSortIndices : ARRAY[1..6] OF INT;
+    TempOffsets : ARRAY[1..6] OF REAL;
+    TempDrillIndex : ARRAY[1..6] OF INT;
+    TempHingeIndex : ARRAY[1..6] OF INT;
+    UsedForSort : ARRAY[1..6] OF BOOL;
+    DrillSequence : ARRAY[1..6] OF INT;
+    CandidatePositions : ARRAY[1..7] OF INT;
+    TempHinges : ARRAY [1..7] OF INT;
+
+    (* ---- PROGRAM STYLE ARRAYS ---- *)
+    ProgramStyles : ARRAY[1..64] OF BOOL;
+    StyleBits : ARRAY[0..7] OF BOOL;
+    ProgramSequentialOP : ARRAY[1..64] OF INT;
+
+    (* ---- NEW PART TYPE ARRAYS ---- *)
+    (* HINGED JAMB *)
+    HingedJambDrillOffset : ARRAY[1..6] OF REAL;
+    HingedJambCycleOffsetSum : ARRAY[1..6] OF REAL;
+    HJShuffleDistArray : ARRAY[1..6] OF REAL;
+    HingedJambS1_CyclePos : ARRAY[1..6] OF REAL;
+    HingedJambS2_CyclePos : ARRAY[1..6] OF REAL;
+    HingedJambDrillPlanIdx : ARRAY[1..6] OF INT;
+    HingedJambOPZone : ARRAY[1..6] OF INT;
+
+    (* STRIKE JAMB *)
+    StrikeJambDrillOffset : ARRAY[1..6] OF REAL;
+    StrikeJambCycleOffsetSum : ARRAY[1..6] OF REAL;
+    SJShuffleDistArray : ARRAY[1..6] OF REAL;
+    StrikeJambS1_CyclePos : ARRAY[1..6] OF REAL;
+    StrikeJambS2_CyclePos : ARRAY[1..6] OF REAL;
+    StrikeJambDrillPlanIdx : ARRAY[1..6] OF INT;
+    StrikeJambOPZone : ARRAY[1..6] OF INT;
+
+    (* SWINGING STILE *)
+    SwingingStileDrillOffset : ARRAY[1..6] OF REAL;
+    SwingingStileCycleOffsetSum : ARRAY[1..6] OF REAL;
+    SSShuffleDistArray : ARRAY[1..6] OF REAL;
+    SwingingStileS1_CyclePos : ARRAY[1..6] OF REAL;
+    SwingingStileS2_CyclePos : ARRAY[1..6] OF REAL;
+    SwingingStileDrillPlanIdx : ARRAY[1..6] OF INT;
+    SwingingStileOPZone : ARRAY[1..6] OF INT;
+
+    (* HINGED STILE *)
+    HingedStileDrillOffset : ARRAY[1..6] OF REAL;
+    HingedStileCycleOffsetSum : ARRAY[1..6] OF REAL;
+    HSShuffleDistArray : ARRAY[1..6] OF REAL;
+    HingedStileS1_CyclePos : ARRAY[1..6] OF REAL;
+    HingedStileS2_CyclePos : ARRAY[1..6] OF REAL;
+    HingedStileDrillPlanIdx : ARRAY[1..6] OF INT;
+    HingedStileOPZone : ARRAY[1..6] OF INT;
+
+    (* RAIL *)
+    RailDrillOffset : ARRAY[1..6] OF REAL;
+    RailCycleOffsetSum : ARRAY[1..6] OF REAL;
+    RailShuffleDistArray : ARRAY[1..6] OF REAL;
+    RailS1_CyclePos : ARRAY[1..6] OF REAL;
+    RailS2_CyclePos : ARRAY[1..6] OF REAL;
+    RailDrillPlanIdx : ARRAY[1..6] OF INT;
+    RailOPZone : ARRAY[1..6] OF INT;
+
+    (* HEAD JAMB *)
+    HeadJambDrillOffset : ARRAY[1..6] OF REAL;
+    HeadJambCycleOffsetSum : ARRAY[1..6] OF REAL;
+    HeadJShuffleDistArray : ARRAY[1..6] OF REAL;
+    HeadJambS1_CyclePos : ARRAY[1..6] OF REAL;
+    HeadJambS2_CyclePos : ARRAY[1..6] OF REAL;
+    HeadJambDrillPlanIdx : ARRAY[1..6] OF INT;
+    HeadJambOPZone : ARRAY[1..6] OF INT;
+
+    (* ---- LEGACY DEBUG ARRAYS (From Original System) ---- *)
+    Debug_S2GripPos : ARRAY [1..64] OF REAL;
+    Debug_S2ReleasePos: ARRAY [1..64] OF REAL;
+    Debug_Offsetdiff : ARRAY [1..64] OF REAL;
+    Debug_HingeDrillOffset : ARRAY [1..64] OF REAL;
+    Debug_S2OpTarget : ARRAY [1..64] OF REAL;
+    Debug_TotalOffset : ARRAY [1..64] OF REAL;
+    Debug_Delta: ARRAY [1..6] OF REAL;
+    Debug_MovementBlocked : ARRAY [1..6] OF BOOL;
+    Debug_RequiredMovement : ARRAY [1..6] OF REAL;
+    Debug_ActualDelta : ARRAY [1..6] OF REAL;
+    Debug_NextOpOffset : ARRAY [1..6] OF REAL;
+    Debug_SimTotalAtOp : ARRAY [1..6] OF REAL;
+    Debug_DeltaMatchesNext : ARRAY [1..6] OF BOOL;
+
+    (* ---- PRE-CALCULATION ARRAYS (From Original System) ---- *)
+    PreCalc_S2GripPos: ARRAY[1..6] OF REAL;
+    PreCalc_S2ReleasePos: ARRAY[1..6] OF REAL;
+    PreCalc_OffsetDiff: ARRAY[1..6] OF REAL;
+    PreCalc_TotalOffset: ARRAY[1..6] OF REAL;
+    PreCalc_HingeDrillOffset: ARRAY[1..6] OF REAL;
+    PreCalc_S2OpTarget: ARRAY[1..6] OF REAL;
+    PreCalc_Delta: ARRAY[1..6] OF REAL;
+    PreCalc_S2Grip: ARRAY[1..6] OF REAL;
+    PreCalc_S2Release: ARRAY[1..6] OF REAL;
+    PreCalc_RequiredMovement : ARRAY [1..6] OF REAL;
+	(*OperationPosition Arrays*)
+	S2GripOperation : ARRAY [1..20] OF REAL;
+	S2ReleaseOperation : ARRAY [1..20] OF REAL;
+	S2JambOperationPositionArray : ARRAY [1..6] OF REAL;
+	S1JambOperationPositionArray : ARRAY [1..6] OF REAL;
+	S2SashOperationPositionArray : ARRAY [1..6] OF REAL;
+	S1SashOperationPositionArray : ARRAY [1..6] OF REAL;
+	JambHingeOperationPosition : ARRAY [1..6] OF REAL;
+	SashHingeOperationPosition : ARRAY [1..6] OF REAL;
+	JambSortedOrder : ARRAY [1..6] OF INT;
+	JambSortedOffsets : ARRAY [1..6] OF REAL;
+	JambOPZone : ARRAY [1..6] OF INT;
+	JambTempSortHinges : ARRAY [1..6] OF INT;
+
+END_TYPE
