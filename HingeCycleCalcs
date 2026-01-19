@@ -1,0 +1,275 @@
+IF PartLength + (TotalOffset) >= S1_MaxPosition THEN
+EOP := S1_MaxPosition;
+ELSIF PartLength + (TotalOffset) < S1_MaxPosition THEN
+EOP := PartLength + (TotalOffset);
+END_IF;
+
+(* Select positions based on part type *)
+(* PartType: 1=SASH, 2=JAMB *)
+
+IF PartType = 1 THEN
+    (* SASH - use sash hinge positions *)
+    S2_HingeDrillPosition[1] := S2SashOperationPositionArray[1];
+    S2_HingeDrillPosition[2] := S2SashOperationPositionArray[2];
+    S2_HingeDrillPosition[3] := S2SashOperationPositionArray[3];
+    S2_HingeDrillPosition[4] := S2SashOperationPositionArray[4];
+    S2_HingeDrillPosition[5] := S2SashOperationPositionArray[5];
+    S2_HingeDrillPosition[6] := S2SashOperationPositionArray[6];
+    S2_HingeDrillPosition[7] := 0.0;  (* Not used for sash *)
+    S2_HingeDrillPosition[8] := 0.0;  (* Not used for sash *)
+    S1_HingeDrillPosition[1] := S1SashOperationPositionArray[1];  (* Always EOP for sash position 1 *)
+    S1_HingeDrillPosition[2] := S1SashOperationPositionArray[2];
+    S1_HingeDrillPosition[3] := S1SashOperationPositionArray[3];
+    S1_HingeDrillPosition[4] := S1SashOperationPositionArray[4];
+    S1_HingeDrillPosition[5] := S1SashOperationPositionArray[5];  (* Always EOP for sash position 5 *)
+    S1_HingeDrillPosition[6] := S1SashOperationPositionArray[6];
+    S1_HingeDrillPosition[7] := 0.0;  (* Not used for sash *)
+    S1_HingeDrillPosition[8] := 0.0;  (* Not used for sash *)
+ELSIF PartType = 2 THEN
+    (* JAMB - use jamb hinge positions *)
+    S2_HingeDrillPosition[1] := S2JambOperationPositionArray[1];
+    S2_HingeDrillPosition[2] := S2JambOperationPositionArray[2];
+    S2_HingeDrillPosition[3] := S2JambOperationPositionArray[3];
+    S2_HingeDrillPosition[4] := S2JambOperationPositionArray[4];
+    S2_HingeDrillPosition[5] := S2JambOperationPositionArray[5];
+    S2_HingeDrillPosition[6] := S2JambOperationPositionArray[6];
+    S2_HingeDrillPosition[7] := 0.0;
+    S2_HingeDrillPosition[8] := 0.0;
+    S1_HingeDrillPosition[1] := S1JambOperationPositionArray[1];
+    S1_HingeDrillPosition[2] := S1JambOperationPositionArray[2];
+    S1_HingeDrillPosition[3] := S1JambOperationPositionArray[3];
+    S1_HingeDrillPosition[4] := S1JambOperationPositionArray[4];
+    S1_HingeDrillPosition[5] := S1JambOperationPositionArray[5];
+    S1_HingeDrillPosition[6] := S1JambOperationPositionArray[6];
+    S1_HingeDrillPosition[7] := 0.0;
+    S1_HingeDrillPosition[8] := 0.0;
+ELSE
+    (* Default to JAMB positions if PartType not set *)
+    S2_HingeDrillPosition[1] := 0.0;
+    S2_HingeDrillPosition[2] := 0.0;
+    S2_HingeDrillPosition[3] := 0.0;
+    S2_HingeDrillPosition[4] := 0.0;
+    S2_HingeDrillPosition[5] := 0.0;
+    S2_HingeDrillPosition[6] := 0.0;
+    S2_HingeDrillPosition[7] := 0.0;
+    S2_HingeDrillPosition[8] := 0.0;
+    S1_HingeDrillPosition[1] := 0.0;
+    S1_HingeDrillPosition[2] := 0.0;
+    S1_HingeDrillPosition[3] := 0.0;
+    S1_HingeDrillPosition[4] := 0.0;
+    S1_HingeDrillPosition[5] := 0.0;
+    S1_HingeDrillPosition[6] := 0.0;
+    S1_HingeDrillPosition[7] := 0.0;
+    S1_HingeDrillPosition[8] := 0.0;
+END_IF;
+
+
+IF Hinged = TRUE AND HingeQuant >= 1 THEN
+
+Hinge1OPPOS 	:= SortedHingeOrder[1]; 				(*First Hinge Operation Position*)
+Hinge1OPID		:= SortedHingeOrder[1]; 				(*First Hinge Operation ID*)
+Hinge1OPOFF 	:= DrillPlanOffsets[Hinge1OPID];		(*First Hinge Operation Offset*)
+Hinge1Zone		:= DrillPlanDrillIndex[Hinge1OPID];		(*First Hinge Operation ZONE - ROBOT #*)
+IF (Hinge1Zone >= 1) AND (Hinge1Zone <= 8) THEN
+    Hinge1_S1_OPPOS	:= S1_HingeDrillPosition[Hinge1Zone];	(*First Hinge Operation S1 Positon*)
+    Hinge1_S2_OPPOS := S2_HingeDrillPosition[Hinge1Zone];	(*First Hinge Operation S2 Position*)
+ELSE
+    Hinge1_S1_OPPOS	:= 0.0;
+    Hinge1_S2_OPPOS := 0.0;
+END_IF;
+ELSE
+Hinge1OPPOS 	:= 0;				
+Hinge1OPID		:= 0; 				
+Hinge1OPOFF 	:= 0.0;		
+Hinge1Zone		:= 0;		
+Hinge1_S1_OPPOS	:= 0.0;	
+Hinge1_S2_OPPOS := 0.0;	
+END_IF;
+
+IF Hinged = TRUE AND HingeQuant >= 2 THEN
+
+Hinge2OPPOS := SortedHingeOrder[2];
+Hinge2OPID	:= SortedHingeOrder[2];
+Hinge2OPOFF := DrillPlanOffsets[Hinge2OPID];
+Hinge2Zone	:= DrillPlanDrillIndex[Hinge2OPID];
+IF (Hinge2Zone >= 1) AND (Hinge2Zone <= 8) THEN
+    Hinge2_S1_OPPOS	:= S1_HingeDrillPosition[Hinge2Zone];
+    Hinge2_S2_OPPOS := S2_HingeDrillPosition[Hinge2Zone];
+ELSE
+    Hinge2_S1_OPPOS	:= 0.0;
+    Hinge2_S2_OPPOS := 0.0;
+END_IF;
+ELSE
+Hinge2OPPOS 	:= 0;				
+Hinge2OPID		:= 0; 				
+Hinge2OPOFF 	:= 0.0;		
+Hinge2Zone		:= 0;		
+Hinge2_S1_OPPOS	:= 0.0;	
+Hinge2_S2_OPPOS := 0.0;	
+END_IF;
+
+
+IF Hinged = TRUE AND HingeQuant >= 3 THEN
+
+Hinge3OPID	:= SortedHingeOrder[3];
+Hinge3OPOFF := DrillPlanOffsets[Hinge3OPID];
+Hinge3Zone	:= DrillPlanDrillIndex[Hinge3OPID];
+IF (Hinge3Zone >= 1) AND (Hinge3Zone <= 8) THEN
+    Hinge3_S1_OPPOS	:= S1_HingeDrillPosition[Hinge3Zone];
+    Hinge3_S2_OPPOS := S2_HingeDrillPosition[Hinge3Zone];
+ELSE
+    Hinge3_S1_OPPOS	:= 0.0;
+    Hinge3_S2_OPPOS := 0.0;
+END_IF;
+ELSE
+Hinge3OPPOS 	:= 0.0;				
+Hinge3OPID		:= 0; 				
+Hinge3OPOFF 	:= 0.0;		
+Hinge3Zone		:= 0;		
+Hinge3_S1_OPPOS	:= 0.0;	
+Hinge3_S2_OPPOS := 0.0;	
+END_IF;
+
+
+IF Hinged = TRUE AND HingeQuant >= 4 THEN
+
+Hinge4OPPOS := SortedHingeOrder[4];
+Hinge4OPID	:= SortedHingeOrder[4];
+Hinge4OPOFF := DrillPlanOffsets[Hinge4OPID];
+Hinge4Zone	:= DrillPlanDrillIndex[Hinge4OPID];
+IF (Hinge4Zone >= 1) AND (Hinge4Zone <= 8) THEN
+    Hinge4_S1_OPPOS	:= S1_HingeDrillPosition[Hinge4Zone];
+    Hinge4_S2_OPPOS := S2_HingeDrillPosition[Hinge4Zone];
+ELSE
+    Hinge4_S1_OPPOS	:= 0.0;
+    Hinge4_S2_OPPOS := 0.0;
+END_IF;
+ELSE
+Hinge4OPPOS 	:= 0;				
+Hinge4OPID		:= 0; 				
+Hinge4OPOFF 	:= 0.0;		
+Hinge4Zone		:= 0;		
+Hinge4_S1_OPPOS	:= 0.0;	
+Hinge4_S2_OPPOS := 0.0;	
+
+
+END_IF;
+
+IF Hinged = TRUE AND HingeQuant >= 5 THEN
+
+Hinge5OPPOS := SortedHingeOrder[5];
+Hinge5OPID	:= SortedHingeOrder[5];
+Hinge5OPOFF := DrillPlanOffsets[Hinge5OPID];
+Hinge5Zone	:= DrillPlanDrillIndex[Hinge5OPID];
+IF (Hinge5Zone >= 1) AND (Hinge5Zone <= 8) THEN
+    Hinge5_S1_OPPOS	:= S1_HingeDrillPosition[Hinge5Zone];
+    Hinge5_S2_OPPOS := S2_HingeDrillPosition[Hinge5Zone];
+ELSE
+    Hinge5_S1_OPPOS	:= 0.0;
+    Hinge5_S2_OPPOS := 0.0;
+END_IF;
+ELSE
+Hinge5OPPOS 	:= 0;				
+Hinge5OPID		:= 0; 				
+Hinge5OPOFF 	:= 0.0;		
+Hinge5Zone		:= 0;		
+Hinge5_S1_OPPOS	:= 0.0;	
+Hinge5_S2_OPPOS := 0.0;	
+END_IF;
+
+IF Hinged = TRUE AND HingeQuant >= 6 THEN
+
+Hinge6OPPOS := SortedHingeOrder[6];
+Hinge6OPID	:= SortedHingeOrder[6];
+Hinge6OPOFF := DrillPlanOffsets[Hinge6OPID];
+Hinge6Zone	:= DrillPlanDrillIndex[Hinge6OPID];
+IF (Hinge6Zone >= 1) AND (Hinge6Zone <= 8) THEN
+    Hinge6_S1_OPPOS	:= S1_HingeDrillPosition[Hinge6Zone];
+    Hinge6_S2_OPPOS := S2_HingeDrillPosition[Hinge6Zone];
+ELSE
+    Hinge6_S1_OPPOS	:= 0.0;
+    Hinge6_S2_OPPOS := 0.0;
+END_IF;
+ELSE
+Hinge6OPPOS 	:= 0;				
+Hinge6OPID		:= 0; 				
+Hinge6OPOFF 	:= 0.0;		
+Hinge6Zone		:= 0;		
+Hinge6_S1_OPPOS	:= 0.0;	
+Hinge6_S2_OPPOS := 0.0;	
+END_IF;
+
+IF OperationNumber = 1 THEN
+OperationTag := Hinge1Zone;
+IF (Hinge1Zone >= 1) AND (Hinge1Zone <= 8) THEN
+    S2_OperationPosition := S2_HingeDrillPosition[Hinge1Zone];
+    S1_OperationPosition := S1_HingeDrillPosition[Hinge1Zone];
+ELSE
+    S2_OperationPosition := 0.0;
+    S1_OperationPosition := 0.0;
+END_IF;
+ELSIF OperationNumber = 2 THEN
+OperationTag := Hinge2Zone;
+IF (Hinge2Zone >= 1) AND (Hinge2Zone <= 8) THEN
+    S2_OperationPosition := S2_HingeDrillPosition[Hinge2Zone];
+    S1_OperationPosition := S1_HingeDrillPosition[Hinge2Zone];
+ELSE
+    S2_OperationPosition := 0.0;
+    S1_OperationPosition := 0.0;
+END_IF;
+ELSIF OperationNumber = 3 THEN
+OperationTag := Hinge3Zone;
+IF (Hinge3Zone >= 1) AND (Hinge3Zone <= 8) THEN
+    S2_OperationPosition := S2_HingeDrillPosition[Hinge3Zone];
+    S1_OperationPosition := S1_HingeDrillPosition[Hinge3Zone];
+ELSE
+    S2_OperationPosition := 0.0;
+    S1_OperationPosition := 0.0;
+END_IF;
+ELSIF OperationNumber = 4 THEN
+OperationTag := Hinge4Zone;
+IF (Hinge4Zone >= 1) AND (Hinge4Zone <= 8) THEN
+    S2_OperationPosition := S2_HingeDrillPosition[Hinge4Zone];
+    S1_OperationPosition := S1_HingeDrillPosition[Hinge4Zone];
+ELSE
+    S2_OperationPosition := 0.0;
+    S1_OperationPosition := 0.0;
+END_IF;
+ELSIF OperationNumber = 5 THEN
+OperationTag := Hinge5Zone;
+IF (Hinge5Zone >= 1) AND (Hinge5Zone <= 8) THEN
+    S2_OperationPosition := S2_HingeDrillPosition[Hinge5Zone];
+    S1_OperationPosition := S1_HingeDrillPosition[Hinge5Zone];
+ELSE
+    S2_OperationPosition := 0.0;
+    S1_OperationPosition := 0.0;
+END_IF;
+ELSIF OperationNumber = 6 THEN
+OperationTag := Hinge6Zone;
+IF (Hinge6Zone >= 1) AND (Hinge6Zone <= 8) THEN
+    S2_OperationPosition := S2_HingeDrillPosition[Hinge6Zone];
+    S1_OperationPosition := S1_HingeDrillPosition[Hinge6Zone];
+ELSE
+    S2_OperationPosition := 0.0;
+    S1_OperationPosition := 0.0;
+END_IF;
+ELSIF OperationNumber = 0 THEN
+OperationTag := 0;
+S2_OperationPosition := 0.0;
+S1_OperationPosition := 0.0;
+END_IF;
+
+OP1Zone := Hinge1Zone;
+OP2Zone := Hinge2Zone;
+OP3Zone := Hinge3Zone;
+OP4Zone := Hinge4Zone;
+OP5Zone := Hinge5Zone;
+OP6Zone := Hinge6Zone;
+
+OPZone[1] := OP1Zone;
+OPZone[2] := OP2Zone;
+OPZone[3] := OP3Zone;
+OPZone[4] := OP4Zone;
+OPZone[5] := OP5Zone;
+OPZone[6] := OP6Zone;
+
