@@ -1,0 +1,152 @@
+(*— ASSUMED GLOBALS —*)
+
+
+(* 1) COPY & MASK OUT BEYOND HingeQuant *)
+TempSortOffsets[1] := DrillPlanOffsets[1];
+TempSortOffsets[2] := DrillPlanOffsets[2];
+TempSortOffsets[3] := DrillPlanOffsets[3];
+TempSortOffsets[4] := DrillPlanOffsets[4];
+TempSortOffsets[5] := DrillPlanOffsets[5];
+TempSortOffsets[6] := DrillPlanOffsets[6];
+
+TempSortIndices[1] := 1;
+TempSortIndices[2] := 2;
+TempSortIndices[3] := 3;
+TempSortIndices[4] := 4;
+TempSortIndices[5] := 5;
+TempSortIndices[6] := 6;
+
+(* Mask out invalid hinges*)
+IF HingeQuant < 1 THEN TempSortOffsets[1] := -1.0E9; END_IF;
+IF HingeQuant < 2 THEN TempSortOffsets[2] := -1.0E9; END_IF;
+IF HingeQuant < 3 THEN TempSortOffsets[3] := -1.0E9; END_IF;
+IF HingeQuant < 4 THEN TempSortOffsets[4] := -1.0E9; END_IF;
+IF HingeQuant < 5 THEN TempSortOffsets[5] := -1.0E9; END_IF;
+IF HingeQuant < 6 THEN TempSortOffsets[6] := -1.0E9; END_IF;
+
+(*— 2) FIVE-PASS BUBBLE-SORT (DESCENDING) —*)
+(* PASS 1 *)
+IF TempSortOffsets[1] < TempSortOffsets[2] THEN
+  SwapOffset := TempSortOffsets[1]; TempSortOffsets[1] := TempSortOffsets[2]; TempSortOffsets[2] := SwapOffset;
+  SwapIndex  := TempSortIndices[1];  TempSortIndices[1] := TempSortIndices[2];  TempSortIndices[2] := SwapIndex;
+END_IF;
+IF TempSortOffsets[2] < TempSortOffsets[3] THEN
+  SwapOffset := TempSortOffsets[2]; TempSortOffsets[2] := TempSortOffsets[3]; TempSortOffsets[3] := SwapOffset;
+  SwapIndex  := TempSortIndices[2];  TempSortIndices[2] := TempSortIndices[3];  TempSortIndices[3] := SwapIndex;
+END_IF;
+IF TempSortOffsets[3] < TempSortOffsets[4] THEN
+  SwapOffset := TempSortOffsets[3]; TempSortOffsets[3] := TempSortOffsets[4]; TempSortOffsets[4] := SwapOffset;
+  SwapIndex  := TempSortIndices[3];  TempSortIndices[3] := TempSortIndices[4];  TempSortIndices[4] := SwapIndex;
+END_IF;
+IF TempSortOffsets[4] < TempSortOffsets[5] THEN
+  SwapOffset := TempSortOffsets[4]; TempSortOffsets[4] := TempSortOffsets[5]; TempSortOffsets[5] := SwapOffset;
+  SwapIndex  := TempSortIndices[4];  TempSortIndices[4] := TempSortIndices[5];  TempSortIndices[5] := SwapIndex;
+END_IF;
+IF TempSortOffsets[5] < TempSortOffsets[6] THEN
+  SwapOffset := TempSortOffsets[5]; TempSortOffsets[5] := TempSortOffsets[6]; TempSortOffsets[6] := SwapOffset;
+  SwapIndex  := TempSortIndices[5];  TempSortIndices[5] := TempSortIndices[6];  TempSortIndices[6] := SwapIndex;
+END_IF;
+
+(* PASS 2*)
+IF TempSortOffsets[1] < TempSortOffsets[2] THEN
+  SwapOffset := TempSortOffsets[1]; TempSortOffsets[1] := TempSortOffsets[2]; TempSortOffsets[2] := SwapOffset;
+  SwapIndex  := TempSortIndices[1];  TempSortIndices[1] := TempSortIndices[2];  TempSortIndices[2] := SwapIndex;
+END_IF;
+IF TempSortOffsets[2] < TempSortOffsets[3] THEN
+  SwapOffset := TempSortOffsets[2]; TempSortOffsets[2] := TempSortOffsets[3]; TempSortOffsets[3] := SwapOffset;
+  SwapIndex  := TempSortIndices[2];  TempSortIndices[2] := TempSortIndices[3];  TempSortIndices[3] := SwapIndex;
+END_IF;
+IF TempSortOffsets[3] < TempSortOffsets[4] THEN
+  SwapOffset := TempSortOffsets[3]; TempSortOffsets[3] := TempSortOffsets[4]; TempSortOffsets[4] := SwapOffset;
+  SwapIndex  := TempSortIndices[3];  TempSortIndices[3] := TempSortIndices[4];  TempSortIndices[4] := SwapIndex;
+END_IF;
+IF TempSortOffsets[4] < TempSortOffsets[5] THEN
+  SwapOffset := TempSortOffsets[4]; TempSortOffsets[4] := TempSortOffsets[5]; TempSortOffsets[5] := SwapOffset;
+  SwapIndex  := TempSortIndices[4];  TempSortIndices[4] := TempSortIndices[5];  TempSortIndices[5] := SwapIndex;
+END_IF;
+IF TempSortOffsets[5] < TempSortOffsets[6] THEN
+  SwapOffset := TempSortOffsets[5]; TempSortOffsets[5] := TempSortOffsets[6]; TempSortOffsets[6] := SwapOffset;
+  SwapIndex  := TempSortIndices[5];  TempSortIndices[5] := TempSortIndices[6];  TempSortIndices[6] := SwapIndex;
+END_IF;
+
+(* PASS 3*)
+IF TempSortOffsets[1] < TempSortOffsets[2] THEN
+  SwapOffset := TempSortOffsets[1]; TempSortOffsets[1] := TempSortOffsets[2]; TempSortOffsets[2] := SwapOffset;
+  SwapIndex  := TempSortIndices[1];  TempSortIndices[1] := TempSortIndices[2];  TempSortIndices[2] := SwapIndex;
+END_IF;
+IF TempSortOffsets[2] < TempSortOffsets[3] THEN
+  SwapOffset := TempSortOffsets[2]; TempSortOffsets[2] := TempSortOffsets[3]; TempSortOffsets[3] := SwapOffset;
+  SwapIndex  := TempSortIndices[2];  TempSortIndices[2] := TempSortIndices[3];  TempSortIndices[3] := SwapIndex;
+END_IF;
+IF TempSortOffsets[3] < TempSortOffsets[4] THEN
+  SwapOffset := TempSortOffsets[3]; TempSortOffsets[3] := TempSortOffsets[4]; TempSortOffsets[4] := SwapOffset;
+  SwapIndex  := TempSortIndices[3];  TempSortIndices[3] := TempSortIndices[4];  TempSortIndices[4] := SwapIndex;
+END_IF;
+IF TempSortOffsets[4] < TempSortOffsets[5] THEN
+  SwapOffset := TempSortOffsets[4]; TempSortOffsets[4] := TempSortOffsets[5]; TempSortOffsets[5] := SwapOffset;
+  SwapIndex  := TempSortIndices[4];  TempSortIndices[4] := TempSortIndices[5];  TempSortIndices[5] := SwapIndex;
+END_IF;
+IF TempSortOffsets[5] < TempSortOffsets[6] THEN
+  SwapOffset := TempSortOffsets[5]; TempSortOffsets[5] := TempSortOffsets[6]; TempSortOffsets[6] := SwapOffset;
+  SwapIndex  := TempSortIndices[5];  TempSortIndices[5] := TempSortIndices[6];  TempSortIndices[6] := SwapIndex;
+END_IF;
+
+(* PASS 4*)
+IF TempSortOffsets[1] < TempSortOffsets[2] THEN
+  SwapOffset := TempSortOffsets[1]; TempSortOffsets[1] := TempSortOffsets[2]; TempSortOffsets[2] := SwapOffset;
+  SwapIndex  := TempSortIndices[1];  TempSortIndices[1] := TempSortIndices[2];  TempSortIndices[2] := SwapIndex;
+END_IF;
+IF TempSortOffsets[2] < TempSortOffsets[3] THEN
+  SwapOffset := TempSortOffsets[2]; TempSortOffsets[2] := TempSortOffsets[3]; TempSortOffsets[3] := SwapOffset;
+  SwapIndex  := TempSortIndices[2];  TempSortIndices[2] := TempSortIndices[3];  TempSortIndices[3] := SwapIndex;
+END_IF;
+IF TempSortOffsets[3] < TempSortOffsets[4] THEN
+  SwapOffset := TempSortOffsets[3]; TempSortOffsets[3] := TempSortOffsets[4]; TempSortOffsets[4] := SwapOffset;
+  SwapIndex  := TempSortIndices[3];  TempSortIndices[3] := TempSortIndices[4];  TempSortIndices[4] := SwapIndex;
+END_IF;
+IF TempSortOffsets[4] < TempSortOffsets[5] THEN
+  SwapOffset := TempSortOffsets[4]; TempSortOffsets[4] := TempSortOffsets[5]; TempSortOffsets[5] := SwapOffset;
+  SwapIndex  := TempSortIndices[4];  TempSortIndices[4] := TempSortIndices[5];  TempSortIndices[5] := SwapIndex;
+END_IF;
+IF TempSortOffsets[5] < TempSortOffsets[6] THEN
+  SwapOffset := TempSortOffsets[5]; TempSortOffsets[5] := TempSortOffsets[6]; TempSortOffsets[6] := SwapOffset;
+  SwapIndex  := TempSortIndices[5];  TempSortIndices[5] := TempSortIndices[6];  TempSortIndices[6] := SwapIndex;
+END_IF;
+
+(* PASS 5*)
+IF TempSortOffsets[1] < TempSortOffsets[2] THEN
+  SwapOffset := TempSortOffsets[1]; TempSortOffsets[1] := TempSortOffsets[2]; TempSortOffsets[2] := SwapOffset;
+  SwapIndex  := TempSortIndices[1];  TempSortIndices[1] := TempSortIndices[2];  TempSortIndices[2] := SwapIndex;
+END_IF;
+IF TempSortOffsets[2] < TempSortOffsets[3] THEN
+  SwapOffset := TempSortOffsets[2]; TempSortOffsets[2] := TempSortOffsets[3]; TempSortOffsets[3] := SwapOffset;
+  SwapIndex  := TempSortIndices[2];  TempSortIndices[2] := TempSortIndices[3];  TempSortIndices[3] := SwapIndex;
+END_IF;
+IF TempSortOffsets[3] < TempSortOffsets[4] THEN
+  SwapOffset := TempSortOffsets[3]; TempSortOffsets[3] := TempSortOffsets[4]; TempSortOffsets[4] := SwapOffset;
+  SwapIndex  := TempSortIndices[3];  TempSortIndices[3] := TempSortIndices[4];  TempSortIndices[4] := SwapIndex;
+END_IF;
+IF TempSortOffsets[4] < TempSortOffsets[5] THEN
+  SwapOffset := TempSortOffsets[4]; TempSortOffsets[4] := TempSortOffsets[5]; TempSortOffsets[5] := SwapOffset;
+  SwapIndex  := TempSortIndices[4];  TempSortIndices[4] := TempSortIndices[5];  TempSortIndices[5] := SwapIndex;
+END_IF;
+IF TempSortOffsets[5] < TempSortOffsets[6] THEN
+  SwapOffset := TempSortOffsets[5]; TempSortOffsets[5] := TempSortOffsets[6]; TempSortOffsets[6] := SwapOffset;
+  SwapIndex  := TempSortIndices[5];  TempSortIndices[5] := TempSortIndices[6];  TempSortIndices[6] := SwapIndex;
+END_IF;
+
+(*— 3) EXTRACT SORTED INDEX ORDER —*)
+SortedHingeOrder[1] := TempSortIndices[1];
+SortedHingeOrder[2] := TempSortIndices[2];
+SortedHingeOrder[3] := TempSortIndices[3];
+SortedHingeOrder[4] := TempSortIndices[4];
+SortedHingeOrder[5] := TempSortIndices[5];
+SortedHingeOrder[6] := TempSortIndices[6];
+
+(*— 4) ZERO OUT ANY ENTRIES BEYOND HingeQuant —*)
+IF HingeQuant < 1 THEN SortedHingeOrder[1] := 0; END_IF;
+IF HingeQuant < 2 THEN SortedHingeOrder[2] := 0; END_IF;
+IF HingeQuant < 3 THEN SortedHingeOrder[3] := 0; END_IF;
+IF HingeQuant < 4 THEN SortedHingeOrder[4] := 0; END_IF;
+IF HingeQuant < 5 THEN SortedHingeOrder[5] := 0; END_IF;
+IF HingeQuant < 6 THEN SortedHingeOrder[6] := 0; END_IF;
