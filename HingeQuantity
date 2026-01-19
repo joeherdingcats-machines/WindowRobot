@@ -1,1 +1,77 @@
 
+(* HINGE DETERMINATIONS*)
+(* added memory retain function 1/5/2026 *)
+MemoryLoad(CLK:=HMI_ParametersLoad);
+MemoryComplete(CLK := PART_COMPLETE);
+PartLength  := (_Modbus_Input_Partlength);
+IF MemoryLoad.Q THEN
+PartLengthMem := PartLength;
+END_IF;
+IF MemoryComplete.Q OR RESET_BIT OR MemoryRelease THEN
+PartLengthMem := REAL#0.0;
+END_IF;
+
+(* Door Part - Single Unit, LH Door, Right Part*)
+IF HMI_UnitSwinging = TRUE AND HMI_UnitLH = TRUE AND HMI_RIGHTPART = TRUE THEN
+	HINGED := TRUE;
+(* Door Part - Single Unit, LH Door, Right Part*)
+ELSIF HMI_UnitSwinging = TRUE AND HMI_UnitRH = TRUE AND HMI_LEFTPART = TRUE THEN
+	HINGED := TRUE;
+(* Door Part - Double Unit, LH Door, Right Part*)
+
+ELSE;
+	HINGED := FALSE;
+END_IF;
+
+
+
+IF Hinged = TRUE AND PartlengthMem  >= 2440.94 THEN
+    HingeQuant := 6;
+ELSIF Hinged = TRUE AND PartlengthMem  >= 2136.14 THEN
+    HingeQuant := 5;
+ELSIF Hinged = TRUE AND PartlengthMem  >= 916.94 THEN
+    HingeQuant := 4;
+ELSIF Hinged = TRUE AND PartlengthMem  >= 612.14 THEN
+    HingeQuant := 3;
+ELSIF Hinged = TRUE AND PartlengthMem  >= 500.01 THEN 
+	HingeQuant := 2;
+
+ELSE
+    HingeQuant := 0;
+END_IF;
+
+(* Jamb Hinge Determinations *)
+
+(* HMI_JambLeft HMI_JambRight HMI_JambTop------*)
+
+IF HMI_JambLeft = TRUE AND HMI_UnitRH = TRUE AND HMI_UnitSwinging = TRUE THEN
+	Hinged_Jamb := TRUE;
+ELSIF HMI_JambRight = TRUE AND HMI_UnitLH = TRUE AND HMI_UnitSwinging = TRUE THEN
+	HINGED_Jamb := TRUE;
+ELSE
+	HINGED_Jamb := FALSE;
+END_IF;
+
+(* Calculate difference between Jamb and Sash for Hinge offsets*)
+(*Right jamb is reversed, miter to table max ---- Left Jamb is not reversed, miter to table origin *)
+
+(*JambSashDifference  Difference between Jamb Length and Sash Length*)
+
+IF HINGED_Jamb = TRUE THEN
+	HingeSashDelta := PartlengthMem  - JambSashDifference;
+END_IF;
+IF Hinged_Jamb = TRUE AND HingeSashDelta > 2440.94 THEN
+    HingeQuant := 6;
+ELSIF Hinged_Jamb = TRUE AND Hinged = TRUE AND HingeSashDelta > 2136.14 AND HingeSashDelta < 2440.94 THEN
+    HingeQuant := 5;
+ELSIF Hinged_Jamb = TRUE AND Hinged = TRUE AND HingeSashDelta > 916.94 AND HingeSashDelta < 2136.14 THEN
+    HingeQuant := 4;
+ELSIF Hinged_Jamb = TRUE AND Hinged = TRUE AND HingeSashDelta >= 612.14 AND HingeSashDelta < 916.94 THEN
+    HingeQuant := 3;
+ELSIF Hinged_Jamb = TRUE AND Hinged = TRUE AND HingeSashDelta >= 500.01 AND HingeSashDelta < 612.14 THEN 
+	HingeQuant := 2;
+
+ELSIF Hinged_Jamb = TRUE AND Hinged = TRUE AND HingeSashDelta <= 500.0 THEN
+    HingeQuant := 0;
+END_IF;
+
