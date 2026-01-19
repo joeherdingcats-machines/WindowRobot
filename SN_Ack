@@ -1,0 +1,11 @@
+(*Verify that Robot style program called matches what is recieved in Fanuc*)
+Match1 := (FI_ACK1_SNO1 = FO_RSR1_PNS1_STYLE1);
+Match2 := (FI_ACK2_SNO2 = FO_RSR2_PNS2_STYLE2);
+Match3 := (FI_ACK3_SNO3 = FO_RSR3_PNS3_STYLE3);
+Match4 := (FI_ACK4_SNO4 = FO_RSR4_PNS4_STYLE4);
+Match5 := (FI_ACK5_SNO5 = FO_RSR5_PNS5_STYLE5);
+Match6 := (FI_ACK6_SNO6 = FO_RSR6_PNS6_STYLE6);
+Match7 := (FI_ACK7_SNO7 = FO_RSR7_PNS7_STYLE7);
+Match8 := (FI_ACK8_SNO8 = FO_RSR8_PNS8_STYLE8);
+(*AllMatch is global variable for confirmation*)
+AllMatch := Match1 AND Match2 AND Match3 AND Match4 AND Match5 AND Match6 AND Match7 AND Match8;
