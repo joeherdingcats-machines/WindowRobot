@@ -1,0 +1,70 @@
+PROGRAM RobotStartStyle
+
+VAR
+    R_TRIG_1 : R_TRIG; (* not used in this export *)
+    TP_1     : TP;     (* not used in this export *)
+
+    TON_1    : TON;
+    R_TRIG_2 : R_TRIG;
+    TON_2    : TON;
+END_VAR
+
+VAR_EXTERNAL
+    SYSTEM_ENABLE    : BOOL;
+    ROBOTSTARTCYCLE  : BOOL; (* Toggle to enable FO_Start *)
+
+    Second           : TIME; (* declared, not used here *)
+    FO_START         : BOOL;
+    FI_OPERATION_FIN : BOOL; (* declared, not used here *)
+
+    Delay            : TIME;
+    StyleNumberCall  : INT;
+END_VAR
+
+VAR RETAIN
+    ZERO : INT := INT#0;
+END_VAR
+
+
+(* ========================= *)
+(* Rising edge detect        *)
+(* ========================= *)
+(* In FBD, this sits on the top rung with SYSTEM_ENABLE and ROBOTSTARTCYCLE *)
+R_TRIG_2(CLK := (SYSTEM_ENABLE AND ROBOTSTARTCYCLE));
+
+
+(* ========================= *)
+(* Style non-zero gating     *)
+(* ========================= *)
+(* NE block: StyleNumberCall <> ZERO *)
+(* MOVE block: when NE is TRUE, copy ROBOTSTARTCYCLE into FO_START *)
+IF (StyleNumberCall <> ZERO) THEN
+    FO_START := ROBOTSTARTCYCLE;
+END_IF;
+
+
+(* ========================= *)
+(* Delay timer(s)            *)
+(* ========================= *)
+(* TON_1: IN = ROBOTSTARTCYCLE, PT = Delay *)
+TON_1(
+    IN := (SYSTEM_ENABLE AND ROBOTSTARTCYCLE),
+    PT := Delay
+);
+
+(* TON_2: IN = FO_START, PT = Delay *)
+TON_2(
+    IN := (SYSTEM_ENABLE AND FO_START),
+    PT := Delay
+);
+
+
+(* ========================= *)
+(* Auto-drop FO_START        *)
+(* ========================= *)
+(* MOVE at bottom: when TON_2.Q is TRUE, write FALSE into FO_START *)
+IF TON_2.Q THEN
+    FO_START := FALSE;
+END_IF;
+
+END_PROGRAM
