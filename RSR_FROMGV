@@ -1,0 +1,164 @@
+(*
+MiterMill1	BOOL	VAR_GLOBAL	1-- Miter Mill Clear Origin
+MiterMill2	BOOL	VAR_GLOBAL	2-- Miter Mill Clear Max
+MiterMillMini1	BOOL	VAR_GLOBAL	3-- Miter Mill Pos 2-3
+MiterMillMini2	BOOL	VAR_GLOBAL	4-- Miter Mill Pos 1-2
+MiterGrind1	BOOL	VAR_GLOBAL	5-- Miter Grind Origin
+MiterGrind2	BOOL	VAR_GLOBAL	6-- Miter Grind Max
+MitergrindMini1	BOOL	VAR_GLOBAL	7-- Miter Grind (Pos 2-3)
+MitergrindMini2	BOOL	VAR_GLOBAL	8-- Miter Grind (Pos 1-2)
+LHInactiveMill1	BOOL	VAR_GLOBAL	9-- LH Inactive Mill 1 (table min)
+LHInactiveMill2	BOOL	VAR_GLOBAL	10-- LH Inactive Mill 2 (table max)
+LHInactiveMiniMill1	BOOL	VAR_GLOBAL	11-- LH Inactive Mill 3 (pos 2-3)
+LHInactiveMiniMill2	BOOL	VAR_GLOBAL	12-- LH INactive Mill 4 (pos 1-2)
+RHInactiveMill1	BOOL	VAR_GLOBAL	13- RH Inactive Mill 1 (Table Min)
+RHInactiveMill2	BOOL	VAR_GLOBAL	14- RH Inactive Mill 2 (Table Max)
+RHInactiveMiniMill1	BOOL	VAR_GLOBAL	15- RH Inactive Mill 3 (Pos 2-3)
+RHInactiveMiniMill2	BOOL	VAR_GLOBAL	16- RH Inactive Mill 4 (Pos 1-2)
+LHHingeDrillSash	BOOL	VAR_GLOBAL	17- LH Sash drill
+RHHingeDrillSash	BOOL	VAR_GLOBAL	18- RH Sash drill
+LHHingeDrillJamb	BOOL	VAR_GLOBAL	19- LH Jamb Drill
+RHHingeDrillJamb	BOOL	VAR_GLOBAL	20- RH Jamb Drill
+HingeMillJamb1	BOOL	VAR_GLOBAL	21- Hinge Mill - Jamb Position 1
+HingeMillJamb2	BOOL	VAR_GLOBAL	22- Hinge Mill - Jamb Position 2
+HingeMillJamb3	BOOL	VAR_GLOBAL	23- Hinge Mill - Jamb Position 3
+HingeMillJamb4	BOOL	VAR_GLOBAL	24- Hinge Mill - Jamb Position 4
+HandleDrill	BOOL	VAR_GLOBAL	25- Handle Drill
+HandleMill	BOOL	VAR_GLOBAL	26- Handle Mill
+TNutDrill1	BOOL	VAR_GLOBAL	27- TNUT Drill Pos1
+TNutDrill2	BOOL	VAR_GLOBAL	28- TNUT Drill Pos2
+TNutDrill3	BOOL	VAR_GLOBAL	29- TNUT Drill Pos3
+TNutDrill4	BOOL	VAR_GLOBAL	30- TNUT Drill Pos4
+JambTNutDrill1	BOOL	VAR_GLOBAL	31- Jamb TNUT Pos1
+JambTNutDrill2	BOOL	VAR_GLOBAL	32- Jamb TNUT Pos2
+JambTNutDrill3	BOOL	VAR_GLOBAL	33- Jamb TNUT Pos3
+JambTNutDrill4	BOOL	VAR_GLOBAL	34- Jamb TNUT Pos4
+JambMiterMill1	BOOL	VAR_GLOBAL	35- Jamb Mill Origin
+JambMiterGrind1	BOOL	VAR_GLOBAL	36- Jamb Miter Grind Origin
+JambMiterMill2	BOOL	VAR_GLOBAL	37- Jamb Miter Mill Max
+JambMiterGrind2	BOOL	VAR_GLOBAL	38- Jamb Miter Grind Max
+JambMiterMiniMill1	BOOL	VAR_GLOBAL	39- Jamb Mill Position 2-3
+JambMiterMiniMill2	BOOL	VAR_GLOBAL	40- Jamb Mill Position 1-2
+JambMiterMiniGrind1	BOOL	VAR_GLOBAL	41- Jamb Grind Position 2-3
+JambMiterMiniGrind2	BOOL	VAR_GLOBAL	42- Jamb Grind Position 1-2
+JambStraightMill1	BOOL	VAR_GLOBAL	43- Jamb Straight Mill Origin
+JambStraightMill2	BOOL	VAR_GLOBAL	44- Jamb Straight Mill Max
+JambStraightMiniMill1	BOOL	VAR_GLOBAL	45- Jamb Straight Mill Position 2-3
+JambStraightMiniMill2	BOOL	VAR_GLOBAL	46- Jamb Straight Mill Position 1-2
+JambStraightMiniGrind1	BOOL	VAR_GLOBAL	47- Jamb Straight Grind Position 2-3
+JambStraightMiniGrind2	BOOL	VAR_GLOBAL	48- Jamb Straight Grind Position 1-2
+JambSexBolt1	BOOL	VAR_GLOBAL	49- Jamb Sex Bolt Position 1
+JambSexBolt2	BOOL	VAR_GLOBAL	50- Jamb Sex Bolt Position 2
+JambSexBolt3	BOOL	VAR_GLOBAL	51- Jamb Sex Bolt Position 3
+JambSexBolt4	BOOL	VAR_GLOBAL	52- Jamb Sex Bolt Position 4
+*)
+
+IF MiterMill1 = TRUE THEN
+    StyleNumberCall := 1;
+ELSIF MiterMill2 = TRUE THEN
+    StyleNumberCall := 2;
+ELSIF MiterMillMini1 = TRUE THEN
+    StyleNumberCall := 3;
+ELSIF MiterMillMini2 = TRUE THEN
+    StyleNumberCall := 4;
+ELSIF MiterGrind1 = TRUE THEN
+    StyleNumberCall := 5;
+ELSIF MiterGrind2 = TRUE THEN
+    StyleNumberCall := 6;
+ELSIF MitergrindMini1 = TRUE THEN
+    StyleNumberCall := 7;
+ELSIF MitergrindMini2 = TRUE THEN
+    StyleNumberCall := 8;
+ELSIF LHInactiveMill1 = TRUE THEN
+    StyleNumberCall := 9;
+ELSIF LHInactiveMill2 = TRUE THEN
+    StyleNumberCall := 10;
+ELSIF LHInactiveMiniMill1 = TRUE THEN
+    StyleNumberCall := 11;
+ELSIF LHInactiveMiniMill2 = TRUE THEN
+    StyleNumberCall := 12;
+ELSIF RHInactiveMill1 = TRUE THEN
+    StyleNumberCall := 13;
+ELSIF RHInactiveMill2 = TRUE THEN
+    StyleNumberCall := 14;
+ELSIF RHInactiveMiniMill1 = TRUE THEN
+    StyleNumberCall := 15;
+ELSIF RHInactiveMiniMill2 = TRUE THEN
+    StyleNumberCall := 16;
+ELSIF LHHingeDrillSash = TRUE THEN
+    StyleNumberCall := 17;
+ELSIF RHHingeDrillSash = TRUE THEN
+    StyleNumberCall := 18;
+ELSIF LHHingeDrillJamb = TRUE THEN
+    StyleNumberCall := 19;
+ELSIF RHHingeDrillJamb = TRUE THEN
+    StyleNumberCall := 20;
+ELSIF HingeMillJamb1 = TRUE THEN
+    StyleNumberCall := 21;
+ELSIF HingeMillJamb2 = TRUE THEN
+    StyleNumberCall := 22;
+ELSIF HingeMillJamb3 = TRUE THEN
+    StyleNumberCall := 23;
+ELSIF HingeMillJamb4 = TRUE THEN
+    StyleNumberCall := 24;
+ELSIF HandleDrill = TRUE THEN
+    StyleNumberCall := 25;
+ELSIF HandleMill = TRUE THEN
+    StyleNumberCall := 26;
+ELSIF TNutDrill1 = TRUE THEN
+    StyleNumberCall := 27;
+ELSIF TNutDrill2 = TRUE THEN
+    StyleNumberCall := 28;
+ELSIF TNutDrill3 = TRUE THEN
+    StyleNumberCall := 29;
+ELSIF TNutDrill4 = TRUE THEN
+    StyleNumberCall := 30;
+ELSIF JambTNutDrill1 = TRUE THEN
+    StyleNumberCall := 31;
+ELSIF JambTNutDrill2 = TRUE THEN
+    StyleNumberCall := 32;
+ELSIF JambTNutDrill3 = TRUE THEN
+    StyleNumberCall := 33;
+ELSIF JambTNutDrill4 = TRUE THEN
+    StyleNumberCall := 34;
+ELSIF JambMiterMill1 = TRUE THEN
+    StyleNumberCall := 35;
+ELSIF JambMiterGrind1 = TRUE THEN
+    StyleNumberCall := 36;
+ELSIF JambMiterMill2 = TRUE THEN
+    StyleNumberCall := 37;
+ELSIF JambMiterGrind2 = TRUE THEN
+    StyleNumberCall := 38;
+ELSIF JambMiterMiniMill1 = TRUE THEN
+    StyleNumberCall := 39;
+ELSIF JambMiterMiniMill2 = TRUE THEN
+    StyleNumberCall := 40;
+ELSIF JambMiterMiniGrind1 = TRUE THEN
+    StyleNumberCall := 41;
+ELSIF JambMiterMiniGrind2 = TRUE THEN
+    StyleNumberCall := 42;
+ELSIF JambStraightMill1 = TRUE THEN
+    StyleNumberCall := 43;
+ELSIF JambStraightMill2 = TRUE THEN
+    StyleNumberCall := 44;
+ELSIF JambStraightMiniMill1 = TRUE THEN
+    StyleNumberCall := 45;
+ELSIF JambStraightMiniMill2 = TRUE THEN
+    StyleNumberCall := 46;
+ELSIF JambStraightMiniGrind1 = TRUE THEN
+    StyleNumberCall := 47;
+ELSIF JambStraightMiniGrind2 = TRUE THEN
+    StyleNumberCall := 48;
+ELSIF JambSexBolt1 = TRUE THEN
+    StyleNumberCall := 49;
+ELSIF JambSexBolt2 = TRUE THEN
+    StyleNumberCall := 50;
+ELSIF JambSexBolt3 = TRUE THEN
+    StyleNumberCall := 51;
+ELSIF JambSexBolt4 = TRUE THEN
+    StyleNumberCall := 52;
+ELSIF PROCESSTESTER = TRUE THEN
+	StyleNumberCall := 53;
+ELSE
+	StyleNumberCall := 0;
+END_IF;
